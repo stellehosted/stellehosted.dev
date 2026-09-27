@@ -106,7 +106,14 @@ const MIME = {
 };
 
 function serveStatic(req, res, urlPath) {
-  const rel = urlPath === '/' ? '/home.html' : urlPath;
+  let rel;
+  try {
+    rel = decodeURIComponent(urlPath);
+  } catch {
+    res.writeHead(400).end();
+    return;
+  }
+  if (rel === '/') rel = '/home.html';
   const filePath = path.normalize(path.join(SITE_ROOT, rel));
   if (!filePath.startsWith(SITE_ROOT)) {
     res.writeHead(403).end();
