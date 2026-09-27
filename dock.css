@@ -1,0 +1,26 @@
+/* ===== dock component (shared across pages: see dock.svg + dock.js) =====
+   No transform or z-index on .dock-wrap: either would make it an isolated group and the
+   dock's overlay-blended rims would stop seeing the page behind them. It relies on being
+   last in the DOM to sit on top. */
+.dock-wrap {
+  position: absolute;
+  left: calc(50% - 19.505rem); bottom: -2.76rem;
+  width: 39.010rem; height: 14.635rem;
+}
+.dock-wrap svg { width: 100%; height: 100%; display: block; overflow: visible; }
+.dock-wrap svg .dock-rim { mix-blend-mode: overlay; }
+.dock-wrap svg .hitbox { fill: transparent; cursor: pointer; }
+.dock-wrap svg .icon-fx {
+  transform-box: fill-box;
+  transform-origin: center;
+  transition: transform 0.15s ease, filter 0.15s ease;
+  /* The hitbox is drawn before its icon, so the icon's painted pixels sit on top of it.
+     Let events fall through to the hitbox underneath, otherwise hovering the icon itself
+     drops :hover on the hitbox (and the click/cursor with it). */
+  pointer-events: none;
+}
+.dock-wrap svg .hitbox:hover + .icon-fx,
+.dock-wrap svg .hitbox:hover + * .icon-fx {
+  transform: scale(1.12);
+  filter: drop-shadow(0 0 0.417rem rgba(255,255,255,0.9));
+}
