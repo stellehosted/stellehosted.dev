@@ -1,0 +1,15 @@
+services:
+  stellehosted:
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+    env_file: server/.env
+    ports:
+      - "8080:8080"
+    networks:
+      - nowplaying
+    restart: unless-stopped
+
+networks:
+  nowplaying:
+    external: true
