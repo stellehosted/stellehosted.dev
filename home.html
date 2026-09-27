@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>stellehosted.dev</title>
+<style>
+  /* Unit system: 1rem == 1 real Sketch unit on the 1920x1080 canvas. html font-size is set so 100rem == canvas width and 56.25rem == canvas height, whichever is the limiting dimension of the viewport (a "contain" fit, centered, matching Sketch's 1920x1080 artboard exactly). Every measurement below is simply the Sketch value divided by 19.2 (px / 1920 * 100). */
+  html {
+    font-size: min(1vw, 1.7778vh);
+  }
+
+  @font-face {
+    font-family: 'FuturaNowHeadline';
+    src: url('font/FuturaNowHeadline.ttf') format('truetype');
+    font-weight: 400; font-style: normal;
+  }
+  @font-face {
+    font-family: 'FuturaNowHeadline';
+    src: url('font/FuturaNowHeadlineItalic.ttf') format('truetype');
+    font-weight: 400; font-style: italic;
+  }
+  @font-face {
+    font-family: 'FuturaNowHeadline';
+    src: url('font/FuturaNowHeadlineBold.ttf') format('truetype');
+    font-weight: 700; font-style: normal;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    background: #06060c;
+    font-family: 'FuturaNowHeadline', sans-serif;
+    color: #fff;
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* Background */
+  .bg {
+    position: fixed; inset: 0; z-index: 0;
+    background-image: url('branding/Banner (Personal).png');
+    background-size: cover;
+    background-position: center;
+  }
+
+  /* ===== the 1920x1080 design canvas, contain-fit + centered ===== */
+  /* NOTE: deliberately no transform / z-index / position:fixed here. Any of those makes
+     .canvas an isolated group, and mix-blend-mode on the glass rims would then only see
+     the canvas's own contents instead of the page background behind it. */
+  .canvas {
+    position: absolute;
+    left: calc(50% - 50rem); top: calc(50% - 28.125rem);
+    width: 100rem;
+    height: 56.25rem;
+  }
+
+  /* Full-width, but vertically locked to the letterboxed canvas so the blur stays under
+     the design at any aspect ratio. Below the canvas it continues as solid black (the
+     bands' own end state) so tall/narrow viewports have no seam. */
+  .blur-layer {
+    position: fixed; left: 0; right: 0;
+    top: calc(50vh - 28.125rem); height: 56.25rem;
+    z-index: 0;
+    pointer-events: none;
+  }
+  .blur-layer::after {
+    content: "";
+    position: absolute; left: 0; right: 0; top: 100%; height: 100vh;
+    background: #000;
+  }
+
+  /* ===== progressive blur bands =====
+     Each band is 6 stacked backdrop-blur layers. Layer i blurs by (i/6)*max and is masked
+     to a triangle peaking at i/6 of the band's height, fading to nothing at the previous
+     and next step, so blur radius ramps ~linearly from 0 at the top edge to max at the bottom. */
+  .blur-band {
+    position: absolute; left: 0; bottom: 0; width: 100%;
+    pointer-events: none; overflow: hidden;
+  }
+  .blur-band .layer, .blur-band .tint { position: absolute; inset: 0; }
+  .blur-band .layer {
+    backdrop-filter: blur(calc(var(--r) * var(--i) / 6));
+    -webkit-backdrop-filter: blur(calc(var(--r) * var(--i) / 6));
+    -webkit-mask-image: linear-gradient(to bottom, transparent calc((var(--i) - 1) * 100% / 6), #000 calc(var(--i) * 100% / 6), transparent calc((var(--i) + 1) * 100% / 6));
+    mask-image: linear-gradient(to bottom, transparent calc((var(--i) - 1) * 100% / 6), #000 calc(var(--i) * 100% / 6), transparent calc((var(--i) + 1) * 100% / 6));
+  }
+
+  /* Background Blur: 650px band, progressive Background blur 0->32px, gradient wash 0%->100% black */
+  .path-band { --r: 1.667rem; height: 33.854rem; }
+  .path-band .tint { background: linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 100%); }
+
+  /* Dock BG shape: 176px band, progressive Glass blur 0->16px, gradient wash 0%->50% black */
+  .dock-strip { --r: 0.833rem; height: 9.167rem; }
+  .dock-strip .tint { background: linear-gradient(to top, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0) 100%); }
+
+  /* Reusable "Glass (Secondary)" surface: frosted fill + outside gradient rim light */
+  .glass-secondary {
+    --glass-radius: 1.25rem;
+    position: absolute;
+    border-radius: var(--glass-radius);
+    background: rgba(128,128,128,0.2);
+    backdrop-filter: blur(0.672rem);
+    -webkit-backdrop-filter: blur(0.672rem);
+    box-shadow:
+      0 0 2.5rem rgba(255,255,255,0.12),
+      inset 0 0 1.25rem rgba(255,255,255,0.32);
+  }
+  /* Glass Outline */
+  .glass-rim {
+    position: absolute;
+    pointer-events: none;
+    mix-blend-mode: overlay;
+  }
+
+  /* Logo */
+  .hero-logo {
+    position: absolute;
+    left: 59.375rem; top: 14.115rem;
+    width: 33.281rem; height: 33.281rem;
+    object-fit: contain;
+    transform: rotate(12.5deg);
+    pointer-events: none;
+  }
+
+  /* Username + Bio */
+  .hero-username {
+    position: absolute;
+    left: 9.375rem; top: 18.333rem;
+    font-weight: 700;
+    font-size: 7.8125rem;
+    line-height: 1;
+    color: #fff;
+    white-space: nowrap;
+  }
+  .hero-tagline {
+    position: absolute;
+    left: 9.375rem; top: 26.433rem;
+    font-style: italic;
+    font-size: 2.0833rem;
+    letter-spacing: -0.025em;
+    color: rgba(255,255,255,0.75);
+    white-space: nowrap;
+  }
+
+  /* Socials Pill */
+  .socials, .rim-socials {
+    left: 9.375rem; top: 30.391rem;
+    width: 32.9688rem; height: 3.229rem;
+  }
+  .socials {
+    --glass-radius: 1.667rem;
+    display: flex; align-items: center;
+    gap: 2.5rem;
+    padding: 0.833rem 1.667rem;
+  }
+  .social-item {
+    display: flex; align-items: center; gap: 0.417rem;
+    font-size: 1.0417rem;
+    color: #f2f0fb;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+  .social-item .avatar {
+    width: 1.5625rem; height: 1.5625rem;
+    border-radius: 50%;
+    background-size: cover;
+    background-position: center;
+    flex-shrink: 0;
+  }
+
+  /* Now Playing */
+  .nowplaying, .rim-nowplaying {
+    left: 9.375rem; top: 36.955rem;
+    width: 24.3229rem; height: 6.667rem;
+  }
+  .rim-album {
+    left: 9.375rem; top: 36.955rem;
+    width: 6.667rem; height: 6.667rem;
+  }
+  .nowplaying {
+    display: flex; align-items: center;
+    padding-right: 3.333rem;
+  }
+  .album-art {
+    position: relative;
+    width: 6.667rem; height: 6.667rem;
+    flex-shrink: 0;
+  }
+  .album-art-clip { width: 100%; height: 100%; border-radius: inherit; overflow: hidden; }
+  .album-art-clip img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .np-info { margin-left: 1.667rem; }
+  .np-title { font-weight: 700; font-size: 1.0417rem; color: #fff; }
+  .np-meta { margin-top: 0.417rem; font-size: 1.0417rem; color: rgba(255,255,255,0.5); }
+
+</style>
+<link rel="stylesheet" href="dock.css">
+</head>
+<body>
+
+<div class="bg"></div>
+
+<div class="blur-layer">
+  <div class="blur-band path-band">
+    <div class="layer" style="--i:1"></div>
+    <div class="layer" style="--i:2"></div>
+    <div class="layer" style="--i:3"></div>
+    <div class="layer" style="--i:4"></div>
+    <div class="layer" style="--i:5"></div>
+    <div class="layer" style="--i:6"></div>
+    <div class="tint"></div>
+  </div>
+  <div class="blur-band dock-strip">
+    <div class="layer" style="--i:1"></div>
+    <div class="layer" style="--i:2"></div>
+    <div class="layer" style="--i:3"></div>
+    <div class="layer" style="--i:4"></div>
+    <div class="layer" style="--i:5"></div>
+    <div class="layer" style="--i:6"></div>
+    <div class="tint"></div>
+  </div>
+</div>
+
+<div class="canvas">
+
+  <img class="hero-logo" src="branding/Logo (White).svg" alt="stellehosted logo">
+
+  <h1 class="hero-username">stellehosted</h1>
+  <p class="hero-tagline">A computer person &amp; an arts person smashed into one</p>
+
+  <div class="socials glass-secondary">
+    <a class="social-item" href="https://www.instagram.com/stellehosted/">
+      <span class="avatar" style="background-image:url('branding/Personal.png')"></span>@stellehosted
+    </a>
+    <a class="social-item" href="https://www.instagram.com/artgazestelle/">
+      <span class="avatar" style="background-image:url('branding/Sakura.png')"></span>@artgazestelle
+    </a>
+    <a class="social-item" href="https://www.instagram.com/stevesun28/">
+      <span class="avatar" style="background-image:url('branding/School.png')"></span>@stevesun28
+    </a>
+  </div>
+  <svg class="glass-rim rim-socials" viewBox="0 0 633 62" preserveAspectRatio="none">
+    <defs><linearGradient id="rimGradSocials" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fff"></stop>
+      <stop offset="50%" stop-color="#fff" stop-opacity="0"></stop>
+      <stop offset="100%" stop-color="#fff"></stop>
+    </linearGradient></defs>
+    <rect x="1" y="1" width="631" height="60" rx="31" fill="none" stroke="url(#rimGradSocials)" stroke-width="2"></rect>
+  </svg>
+
+  <div class="nowplaying glass-secondary">
+    <div class="album-art glass-secondary">
+      <div class="album-art-clip"><img id="np-cover" src="album.jpg" alt="Album cover"></div>
+    </div>
+    <div class="np-info">
+      <div class="np-title" id="np-title">Tell Your World</div>
+      <div class="np-meta" id="np-meta">livetune | Tell Your World EP</div>
+    </div>
+  </div>
+  <svg class="glass-rim rim-nowplaying" viewBox="0 0 467 128" preserveAspectRatio="none">
+    <defs><linearGradient id="rimGradNP" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fff"></stop>
+      <stop offset="50%" stop-color="#fff" stop-opacity="0"></stop>
+      <stop offset="100%" stop-color="#fff"></stop>
+    </linearGradient></defs>
+    <rect x="1" y="1" width="465" height="126" rx="23" fill="none" stroke="url(#rimGradNP)" stroke-width="2"></rect>
+  </svg>
+  <svg class="glass-rim rim-album" viewBox="0 0 128 128" preserveAspectRatio="none">
+    <defs><linearGradient id="rimGradAlbum" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fff"></stop>
+      <stop offset="50%" stop-color="#fff" stop-opacity="0"></stop>
+      <stop offset="100%" stop-color="#fff"></stop>
+    </linearGradient></defs>
+    <rect x="1" y="1" width="126" height="126" rx="23" fill="none" stroke="url(#rimGradAlbum)" stroke-width="2"></rect>
+  </svg>
+
+  <div class="dock-wrap"></div>
+
+</div>
+
+<script src="dock.js"></script>
+<script src="nowplaying.js"></script>
+</body>
+</html>

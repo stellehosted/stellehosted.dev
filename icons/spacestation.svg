@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_2" data-name="Layer 2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1545.6 1746.03">
+  <defs>
+    <style>
+      .cls-1 {
+        stroke-width: 40px;
+      }
+
+      .cls-1, .cls-2 {
+        fill: none;
+        stroke: #fff;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .cls-2 {
+        stroke-width: 250px;
+      }
+    </style>
+  </defs>
+  <g id="SpaceStation_Lined_" data-name="SpaceStation (Lined)">
+    <line class="cls-2" x1="772.8" y1="125" x2="1420.6" y2="499.01"/>
+    <line class="cls-2" x1="125" y1="499.01" x2="772.8" y2="125"/>
+    <line class="cls-2" x1="448.9" y1="686.01" x2="125" y2="499.01"/>
+    <line class="cls-2" x1="1420.6" y1="1247.02" x2="1096.7" y2="1060.02"/>
+    <line class="cls-2" x1="772.8" y1="1621.03" x2="1420.6" y2="1247.02"/>
+    <line class="cls-2" x1="125" y1="1247.02" x2="772.8" y2="1621.03"/>
+    <path class="cls-1" d="M609.22,1015.92c0,33.4-23.45,46.94-52.37,30.24-28.93-16.7-52.37-57.32-52.37-90.72,0-33.4,23.45-46.94,52.37-30.24,28.93,16.7,52.37,57.32,52.37,90.72Z"/>
+    <line class="cls-1" x1="556.84" y1="1144.26" x2="556.84" y2="1244.26"/>
+  </g>
+</svg>
