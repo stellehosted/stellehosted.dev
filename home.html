@@ -171,8 +171,16 @@
   /* Now Playing */
   .nowplaying, .rim-nowplaying {
     left: 9.375rem; top: 36.955rem;
-    width: 24.3229rem; height: 6.667rem;
+    height: 6.667rem;
   }
+  /* Pill grows with its text between min and max width; nowplaying.js mirrors the final
+     width onto .rim-nowplaying (a sibling, so it can't size itself from the pill). */
+  .nowplaying {
+    width: max-content;
+    min-width: 24.3229rem;
+    max-width: 45rem;
+  }
+  .rim-nowplaying { width: 24.3229rem; }
   .rim-album {
     left: 9.375rem; top: 36.955rem;
     width: 6.667rem; height: 6.667rem;
@@ -188,7 +196,8 @@
   }
   .album-art-clip { width: 100%; height: 100%; border-radius: inherit; overflow: hidden; }
   .album-art-clip img { width: 100%; height: 100%; object-fit: cover; display: block; }
-  .np-info { margin-left: 1.667rem; }
+  .np-info { margin-left: 1.667rem; min-width: 0; }
+  .np-title, .np-meta { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .np-title { font-weight: 700; font-size: 1.0417rem; color: #fff; }
   .np-meta { margin-top: 0.417rem; font-size: 1.0417rem; color: rgba(255,255,255,0.5); }
 
@@ -247,22 +256,22 @@
     <rect x="1" y="1" width="631" height="60" rx="31" fill="none" stroke="url(#rimGradSocials)" stroke-width="2"></rect>
   </svg>
 
-  <div class="nowplaying glass-secondary">
+  <div class="nowplaying glass-secondary" id="np-pill">
     <div class="album-art glass-secondary">
       <div class="album-art-clip"><img id="np-cover" src="album.jpg" alt="Album cover"></div>
     </div>
     <div class="np-info">
-      <div class="np-title" id="np-title">Tell Your World</div>
-      <div class="np-meta" id="np-meta">livetune | Tell Your World EP</div>
+      <div class="np-title" id="np-title">Song Title</div>
+      <div class="np-meta" id="np-meta">Artist | Album</div>
     </div>
   </div>
-  <svg class="glass-rim rim-nowplaying" viewBox="0 0 467 128" preserveAspectRatio="none">
+  <svg class="glass-rim rim-nowplaying" id="np-rim" viewBox="0 0 467 128" preserveAspectRatio="none">
     <defs><linearGradient id="rimGradNP" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0%" stop-color="#fff"></stop>
       <stop offset="50%" stop-color="#fff" stop-opacity="0"></stop>
       <stop offset="100%" stop-color="#fff"></stop>
     </linearGradient></defs>
-    <rect x="1" y="1" width="465" height="126" rx="23" fill="none" stroke="url(#rimGradNP)" stroke-width="2"></rect>
+    <rect id="np-rim-rect" x="1" y="1" width="465" height="126" rx="23" fill="none" stroke="url(#rimGradNP)" stroke-width="2"></rect>
   </svg>
   <svg class="glass-rim rim-album" viewBox="0 0 128 128" preserveAspectRatio="none">
     <defs><linearGradient id="rimGradAlbum" x1="0" y1="0" x2="0" y2="1">

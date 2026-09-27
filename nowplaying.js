@@ -1,6 +1,4 @@
-// Polls the backend's /api/nowplaying (which itself proxies Navidrome) and
-// updates the now-playing pill. Falls back to "not listening" text when
-// nothing is playing, rather than leaving stale/fake track info on screen.
+// Polls the backend's /api/nowplaying (which itself proxies Navidrome) and updates the now-playing pill. Falls back to "not listening" text when nothing is playing, rather than leaving stale/fake track info on screen.
 
 const NOWPLAYING_POLL_MS = 15000;
 
@@ -23,7 +21,7 @@ async function pollNowPlaying() {
         lastCoverArtId = data.coverArtId;
       }
     } else {
-      titleEl.textContent = 'Not listening right now';
+      titleEl.textContent = 'Silence...';
       metaEl.textContent = '';
       if (lastCoverArtId !== null) {
         coverEl.src = 'album.jpg';
@@ -35,6 +33,21 @@ async function pollNowPlaying() {
     console.error('nowplaying poll failed:', err);
   }
 }
+
+// The rim is a separate SVG (see home.html), so keep its width and viewBox in sync with the
+// pill. One viewBox unit is 1/19.2 rem, which keeps the 23-unit corner radius undistorted.
+const pillEl = document.getElementById('np-pill');
+const rimEl = document.getElementById('np-rim');
+const rimRectEl = document.getElementById('np-rim-rect');
+
+new ResizeObserver(() => {
+  const rem = parseFloat(getComputedStyle(document.documentElement).fontSize);
+  const widthRem = pillEl.getBoundingClientRect().width / rem;
+  const units = Math.round(widthRem * 19.2);
+  rimEl.style.width = `${widthRem}rem`;
+  rimEl.setAttribute('viewBox', `0 0 ${units} 128`);
+  rimRectEl.setAttribute('width', units - 2);
+}).observe(pillEl);
 
 pollNowPlaying();
 setInterval(pollNowPlaying, NOWPLAYING_POLL_MS);
