@@ -1,15 +1,28 @@
 services:
-  stellehosted:
+  stellehosted.dev:
+    container_name: "stellehosted.dev"
     build:
       context: .
       dockerfile: server/Dockerfile
-    env_file: server/.env
-    ports:
-      - "8090:8080"
+    environment:
+      - NAVIDROME_URL=${NAVIDROME_URL}
+      - NAVIDROME_USER=${NAVIDROME_USER}
+      - NAVIDROME_PASSWORD=${NAVIDROME_PASSWORD}
+      - NAVIDROME_USERNAME_FILTER=${NAVIDROME_USERNAME_FILTER:-}
     networks:
-      - nowplaying
+      - stellehosted.dev
+    restart: unless-stopped
+
+  cloudflared:
+    container_name: "cloudflared"
+    image: cloudflare/cloudflared:latest
+    command: tunnel --no-autoupdate run
+    environment:
+      - TUNNEL_TOKEN=${TUNNEL_TOKEN}
+    networks:
+      - stellehosted.dev
     restart: unless-stopped
 
 networks:
-  nowplaying:
+  stellehosted.dev:
     external: true
