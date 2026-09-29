@@ -18,8 +18,9 @@ async function pollNowPlaying() {
     const data = await res.json();
 
     if (data.playing) {
-      vizEl.classList.add('playing');
-      vizEl.classList.remove('paused');
+      const paused = data.state === 'paused' || data.state === 'stopped';
+      vizEl.classList.toggle('playing', !paused);
+      vizEl.classList.toggle('paused', paused);
       hasTrack = true;
       titleEl.textContent = data.title || 'Unknown title';
       metaEl.textContent = [data.artist, data.album].filter(Boolean).join(' | ');
@@ -28,7 +29,7 @@ async function pollNowPlaying() {
         lastCoverArtId = data.coverArtId;
       }
     } else {
-      // Paused/stopped: Navidrome just stops listing the track, so keep the last one on screen.
+      // Entry expired from Navidrome's now-playing list (client sent no state): treat as paused and keep the last track on screen.
       vizEl.classList.remove('playing');
       vizEl.classList.add('paused');
       if (!hasTrack) {

@@ -64,6 +64,8 @@ async function fetchNowPlaying() {
           artist: entry.artist,
           album: entry.album,
           coverArtId: entry.coverArt || null,
+          // OpenSubsonic playbackReport extension: starting | playing | paused | stopped. Absent if the server/client doesn't report it.
+          state: entry.state || null,
         };
       }
     } catch (err) {
