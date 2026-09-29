@@ -1,12 +1,16 @@
-// Polls the backend's /api/nowplaying (which itself proxies Navidrome) and updates the now-playing pill. Falls back to "not listening" text when nothing is playing, rather than leaving stale/fake track info on screen.
+// Polls the backend's /api/nowplaying (which itself proxies Navidrome) and updates the now-playing pill. Keeps the last track (with a pause icon) once something has played; shows "Silence..." only if nothing has played since page load.
 
 const NOWPLAYING_POLL_MS = 15000;
 
 const titleEl = document.getElementById('np-title');
 const metaEl = document.getElementById('np-meta');
 const coverEl = document.getElementById('np-cover');
+const vizEl = document.getElementById('np-viz');
+
+vizEl.classList.add('paused');
 
 let lastCoverArtId = undefined;
+let hasTrack = false;
 
 async function pollNowPlaying() {
   try {
@@ -14,6 +18,9 @@ async function pollNowPlaying() {
     const data = await res.json();
 
     if (data.playing) {
+      vizEl.classList.add('playing');
+      vizEl.classList.remove('paused');
+      hasTrack = true;
       titleEl.textContent = data.title || 'Unknown title';
       metaEl.textContent = [data.artist, data.album].filter(Boolean).join(' | ');
       if (data.coverArtId !== lastCoverArtId) {
@@ -21,11 +28,16 @@ async function pollNowPlaying() {
         lastCoverArtId = data.coverArtId;
       }
     } else {
-      titleEl.textContent = 'Silence...';
-      metaEl.textContent = '';
-      if (lastCoverArtId !== null) {
-        coverEl.src = 'album.jpg';
-        lastCoverArtId = null;
+      // Paused/stopped: Navidrome just stops listing the track, so keep the last one on screen.
+      vizEl.classList.remove('playing');
+      vizEl.classList.add('paused');
+      if (!hasTrack) {
+        titleEl.textContent = 'Silence...';
+        metaEl.textContent = '';
+        if (lastCoverArtId !== null) {
+          coverEl.src = 'album.jpg';
+          lastCoverArtId = null;
+        }
       }
     }
   } catch (err) {
