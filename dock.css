@@ -8,7 +8,9 @@
   width: 39.010rem; height: 14.635rem;
 }
 .dock-wrap svg { width: 100%; height: 100%; display: block; overflow: visible; }
-.dock-wrap svg .dock-rim { mix-blend-mode: overlay; }
+/* Rims live in a second svg so the blend sits on an HTML-level element (Safari ignores
+   mix-blend-mode on SVG children). Built in dock.js. */
+.dock-wrap svg.dock-rims { position: absolute; inset: 0; pointer-events: none; mix-blend-mode: overlay; }
 .dock-wrap svg .hitbox { fill: transparent; cursor: pointer; }
 .dock-wrap svg .icon-fx {
   transform-box: fill-box;

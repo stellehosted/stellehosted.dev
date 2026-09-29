@@ -200,6 +200,9 @@
   .album-art-clip { width: 100%; height: 100%; border-radius: inherit; overflow: hidden; }
   .album-art-clip img { width: 100%; height: 100%; object-fit: cover; display: block; }
   .np-info { margin-left: 1.667rem; min-width: 0; }
+  /* Empty state (nothing played yet): drop the album art and its rim; text takes the art's place. */
+  .no-art .album-art, .no-art ~ .rim-album { display: none; }
+  .no-art .np-info { margin-left: 3.333rem; }
   .np-title-row { display: flex; align-items: center; gap: 0.625rem; min-width: 0; }
   
   /* Music Visualizer */
@@ -282,7 +285,7 @@
     <rect x="1" y="1" width="631" height="60" rx="31" fill="none" stroke="url(#rimGradSocials)" stroke-width="2"></rect>
   </svg>
 
-  <div class="nowplaying glass-secondary" id="np-pill">
+  <div class="nowplaying glass-secondary no-art" id="np-pill">
     <div class="album-art glass-secondary">
       <div class="album-art-clip"><img id="np-cover" src="album.jpg" alt="Album cover"></div>
     </div>
@@ -291,9 +294,9 @@
         <div class="np-viz" id="np-viz" aria-hidden="true"><i></i><i></i><i></i>
           <svg class="np-pause" viewBox="0 0 16 16"><rect x="3.5" y="2.5" width="3" height="11" rx="1"/><rect x="9.5" y="2.5" width="3" height="11" rx="1"/></svg>
         </div>
-        <div class="np-title" id="np-title">Song Title</div>
+        <div class="np-title" id="np-title"></div>
       </div>
-      <div class="np-meta" id="np-meta">Artist | Album</div>
+      <div class="np-meta" id="np-meta"></div>
     </div>
   </div>
   <svg class="glass-rim rim-nowplaying" id="np-rim" viewBox="0 0 467 128" preserveAspectRatio="none">
@@ -318,6 +321,6 @@
 </div>
 
 <script src="dock.js"></script>
-<script src="nowplaying.js?v=2"></script>
+<script src="nowplaying.js?v=3"></script>
 </body>
 </html>
