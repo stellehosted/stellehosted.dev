@@ -126,7 +126,11 @@ function serveStatic(req, res, urlPath) {
       res.writeHead(404).end('Not found');
       return;
     }
-    res.writeHead(200, { 'Content-Type': MIME[path.extname(filePath)] || 'application/octet-stream' });
+    // no-cache = always revalidate: stops Safari and Cloudflare serving a stale nowplaying.js/home.html after a deploy.
+    res.writeHead(200, {
+      'Content-Type': MIME[path.extname(filePath)] || 'application/octet-stream',
+      'Cache-Control': 'no-cache',
+    });
     res.end(data);
   });
 }
@@ -152,3 +156,5 @@ const server = http.createServer(async (req, res) => {
 server.listen(PORT, () => {
   console.log(`stellehosted.dev listening on :${PORT} (Navidrome: ${NAVIDROME_URL})`);
 });
+
+process.on('SIGTERM', () => process.exit(0));
