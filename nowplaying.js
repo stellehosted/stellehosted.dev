@@ -6,6 +6,7 @@ const titleEl = document.getElementById('np-title');
 const metaEl = document.getElementById('np-meta');
 const coverEl = document.getElementById('np-cover');
 const vizEl = document.getElementById('np-viz');
+const pillEl = document.getElementById('np-pill');
 
 vizEl.classList.add('paused');
 
@@ -22,6 +23,7 @@ async function pollNowPlaying() {
       vizEl.classList.toggle('playing', !paused);
       vizEl.classList.toggle('paused', paused);
       hasTrack = true;
+      pillEl.classList.remove('no-art');
       titleEl.textContent = data.title || 'Unknown title';
       metaEl.textContent = [data.artist, data.album].filter(Boolean).join(' | ');
       if (data.coverArtId !== lastCoverArtId) {
@@ -35,10 +37,7 @@ async function pollNowPlaying() {
       if (!hasTrack) {
         titleEl.textContent = 'Silence...';
         metaEl.textContent = '';
-        if (lastCoverArtId !== null) {
-          coverEl.src = 'album.jpg';
-          lastCoverArtId = null;
-        }
+        pillEl.classList.add('no-art');
       }
     }
   } catch (err) {
@@ -49,7 +48,6 @@ async function pollNowPlaying() {
 
 // The rim is a separate SVG (see home.html), so keep its width and viewBox in sync with the
 // pill. One viewBox unit is 1/19.2 rem, which keeps the 23-unit corner radius undistorted.
-const pillEl = document.getElementById('np-pill');
 const rimEl = document.getElementById('np-rim');
 const rimRectEl = document.getElementById('np-rim-rect');
 
