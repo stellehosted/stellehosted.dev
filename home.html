@@ -192,13 +192,15 @@
     display: flex; align-items: center;
     padding-right: 3.333rem;
   }
+  /* Art is a fixed height; its width follows the image's aspect ratio (capped so odd/wide covers
+     get cropped rather than swallowing the pill). nowplaying.js mirrors the width onto .rim-album. */
   .album-art {
-    position: relative;
-    width: 6.667rem; height: 6.667rem;
+    position: relative; display: flex;
+    height: 6.667rem; max-width: 13.333rem;
     flex-shrink: 0;
   }
-  .album-art-clip { width: 100%; height: 100%; border-radius: inherit; overflow: hidden; }
-  .album-art-clip img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .album-art-clip { height: 100%; border-radius: inherit; overflow: hidden; }
+  .album-art-clip img { height: 100%; width: auto; max-width: 13.333rem; object-fit: cover; display: block; }
   .np-info { margin-left: 1.667rem; min-width: 0; }
   /* Empty state (nothing played yet): drop the album art and its rim; text takes the art's place. */
   .no-art .album-art, .no-art ~ .rim-album { display: none; }
@@ -307,13 +309,13 @@
     </linearGradient></defs>
     <rect id="np-rim-rect" x="1" y="1" width="465" height="126" rx="23" fill="none" stroke="url(#rimGradNP)" stroke-width="2"></rect>
   </svg>
-  <svg class="glass-rim rim-album" viewBox="0 0 128 128" preserveAspectRatio="none">
+  <svg class="glass-rim rim-album" id="np-album-rim" viewBox="0 0 128 128" preserveAspectRatio="none">
     <defs><linearGradient id="rimGradAlbum" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0%" stop-color="#fff"></stop>
       <stop offset="50%" stop-color="#fff" stop-opacity="0"></stop>
       <stop offset="100%" stop-color="#fff"></stop>
     </linearGradient></defs>
-    <rect x="1" y="1" width="126" height="126" rx="23" fill="none" stroke="url(#rimGradAlbum)" stroke-width="2"></rect>
+    <rect id="np-album-rim-rect" x="1" y="1" width="126" height="126" rx="23" fill="none" stroke="url(#rimGradAlbum)" stroke-width="2"></rect>
   </svg>
 
   <div class="dock-wrap"></div>
@@ -321,6 +323,6 @@
 </div>
 
 <script src="dock.js"></script>
-<script src="nowplaying.js?v=3"></script>
+<script src="nowplaying.js?v=4"></script>
 </body>
 </html>

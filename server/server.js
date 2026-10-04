@@ -36,6 +36,15 @@ function subsonicAuthParams() {
   });
 }
 
+// Navidrome joins multi-artist tracks into one display string ("A • B"). Prefer the structured
+// OpenSubsonic artists list; otherwise split the string on the separators Navidrome/taggers use.
+// Commas are left alone because they appear inside real names ("Tyler, The Creator").
+function firstArtist(entry) {
+  const structured = entry.artists?.[0]?.name;
+  if (structured) return structured;
+  return entry.artist?.split(/\s+[•\/;]\s+|;\s*/)[0];
+}
+
 let nowPlayingCache = { at: 0, data: null };
 
 async function fetchNowPlaying() {
@@ -61,7 +70,7 @@ async function fetchNowPlaying() {
         result = {
           playing: true,
           title: entry.title,
-          artist: entry.artist,
+          artist: firstArtist(entry),
           album: entry.album,
           coverArtId: entry.coverArt || null,
           // OpenSubsonic playbackReport extension: starting | playing | paused | stopped. Absent if the server/client doesn't report it.
