@@ -25,7 +25,7 @@ async function pollNowPlaying() {
       hasTrack = true;
       pillEl.classList.remove('no-art');
       titleEl.textContent = data.title || 'Unknown title';
-      metaEl.textContent = [data.artist, data.album].filter(Boolean).join(' | ');
+      metaEl.textContent = [data.artist, data.album].filter(Boolean).join(' • ');
       if (data.coverArtId !== lastCoverArtId) {
         coverEl.src = `/api/coverart?id=${encodeURIComponent(data.coverArtId)}`;
         lastCoverArtId = data.coverArtId;
@@ -46,19 +46,22 @@ async function pollNowPlaying() {
   }
 }
 
-// The rim is a separate SVG (see home.html), so keep its width and viewBox in sync with the
-// pill. One viewBox unit is 1/19.2 rem, which keeps the 23-unit corner radius undistorted.
-const rimEl = document.getElementById('np-rim');
-const rimRectEl = document.getElementById('np-rim-rect');
+// The rims are separate SVGs (see home.html), so keep each one's width and viewBox in sync with
+// the element it outlines. One viewBox unit is 1/19.2 rem, which keeps the 23-unit corner radius
+// undistorted.
+function syncRim(targetEl, rimEl, rimRectEl) {
+  new ResizeObserver(() => {
+    const rem = parseFloat(getComputedStyle(document.documentElement).fontSize);
+    const widthRem = targetEl.getBoundingClientRect().width / rem;
+    const units = Math.round(widthRem * 19.2);
+    rimEl.style.width = `${widthRem}rem`;
+    rimEl.setAttribute('viewBox', `0 0 ${units} 128`);
+    rimRectEl.setAttribute('width', units - 2);
+  }).observe(targetEl);
+}
 
-new ResizeObserver(() => {
-  const rem = parseFloat(getComputedStyle(document.documentElement).fontSize);
-  const widthRem = pillEl.getBoundingClientRect().width / rem;
-  const units = Math.round(widthRem * 19.2);
-  rimEl.style.width = `${widthRem}rem`;
-  rimEl.setAttribute('viewBox', `0 0 ${units} 128`);
-  rimRectEl.setAttribute('width', units - 2);
-}).observe(pillEl);
+syncRim(pillEl, document.getElementById('np-rim'), document.getElementById('np-rim-rect'));
+syncRim(document.querySelector('.album-art'), document.getElementById('np-album-rim'), document.getElementById('np-album-rim-rect'));
 
 pollNowPlaying();
 setInterval(pollNowPlaying, NOWPLAYING_POLL_MS);
