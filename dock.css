@@ -1,10 +1,14 @@
 /* ===== dock component (shared across pages: see dock.svg + dock.js) =====
-   No transform or z-index on .dock-wrap: either would make it an isolated group and the
-   dock's overlay-blended rims would stop seeing the page behind them. It relies on being
-   last in the DOM to sit on top, and on <body> being position:relative so `bottom` means the
-   bottom of the window. Sizes are in rem, so the dock scales with the 1920x1080 design canvas. */
+   The dock is four sibling layers, all position:fixed with the same box: .dock-bg (blur strip),
+   .dock-glass (per-pill blur), .dock-wrap (the svg) and .dock-rims (overlay-blended rims). They
+   must ALL be fixed: Safari needs fixed layers to blur/blend the fixed page background, and if
+   the svg were absolute while the rest were fixed, zooming/scrolling (visual vs layout viewport)
+   would slide them out of sync. The rims are a sibling, not a child, of .dock-wrap, because a
+   fixed element is an isolated group and the rims' overlay blend would stop seeing the page.
+   Paint order is DOM order (no z-index). Sizes are in rem, so the dock scales with the
+   1920x1080 design canvas. */
 .dock-wrap {
-  position: absolute;
+  position: fixed;
   left: calc(50% - 19.505rem); bottom: -2.76rem;
   width: 39.010rem; height: 14.635rem;
   pointer-events: auto;   /* stays clickable even if a page sets pointer-events: none on its content */
@@ -53,24 +57,13 @@
    only blends against it from another fixed layer. A position:absolute overlay (even one at
    body level) renders as normal blend. Same box as .dock-wrap; body is the viewport, so
    `bottom` resolves identically. */
-.dock-wrap svg.dock-rims {
+svg.dock-rims {
   position: fixed;
   left: calc(50% - 19.505rem); bottom: -2.76rem;
   width: 39.010rem; height: 14.635rem;
   pointer-events: none; mix-blend-mode: overlay;
 }
+/* Hitboxes are invisible rects drawn before their icon; fx.css makes the icons themselves
+   pointer-transparent so hovering the icon still counts as hovering the hitbox. */
 .dock-wrap svg .hitbox { fill: transparent; cursor: pointer; }
-.dock-wrap svg .icon-fx {
-  transform-box: fill-box;
-  transform-origin: center;
-  transition: transform 0.15s ease, filter 0.15s ease;
-  /* The hitbox is drawn before its icon, so the icon's painted pixels sit on top of it.
-     Let events fall through to the hitbox underneath, otherwise hovering the icon itself
-     drops :hover on the hitbox (and the click/cursor with it). */
-  pointer-events: none;
-}
-.dock-wrap svg .hitbox:hover + .icon-fx,
-.dock-wrap svg .hitbox:hover + * .icon-fx {
-  transform: scale(1.12);
-  filter: drop-shadow(0 0 0.417rem rgba(255,255,255,0.9));
-}
+/* Hover scale + glow comes from the shared fx.css (.fx-hit / .fx classes in dock.svg). */

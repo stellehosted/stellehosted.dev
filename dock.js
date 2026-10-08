@@ -12,6 +12,14 @@ const asset = (name) => new URL(name, BASE).href;
 // (Photos, Design, SpaceStation) aren't wired up until their pages exist.
 const DOCK_LINKS = { Center: '/', Art: '/art' };
 
+// Icon hover (scale + glow) is the shared fx module; skip if the page already includes it.
+if (!document.querySelector('script[data-fx]')) {
+  const fx = document.createElement('script');
+  fx.src = asset('fx.js');
+  fx.dataset.fx = '';
+  document.body.appendChild(fx);
+}
+
 // Wait for the stylesheet before inserting the svg, or it flashes at full size for a frame.
 const stylesReady = new Promise((resolve) => {
   const link = document.createElement('link');
@@ -108,10 +116,10 @@ document.querySelectorAll('.dock-wrap').forEach(async (el) => {
     [...group.children].forEach((c) => { if (!c.classList.contains('dock-rim')) c.remove(); });
   });
   dock.querySelectorAll('.dock-rim').forEach((r) => r.remove());
-  el.appendChild(rims);
+  el.after(rims);   // sibling, last in the DOM: see the layer notes at the top of dock.css
 
   // Each hitbox is drawn right before its icon group (or, for SpaceStation, lives inside it).
-  dock.querySelectorAll('.hitbox').forEach((hit) => {
+  dock.querySelectorAll('.fx-hit').forEach((hit) => {
     const id = hit.nextElementSibling?.id || hit.parentElement.id;
     const href = DOCK_LINKS[id];
     if (!href) return;
