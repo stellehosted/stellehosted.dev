@@ -15,7 +15,10 @@ More pages coming soon...
 ---
 # Shared components
 ### Dock (`dock.js`, `dock.css`, `dock.svg`)
-The Dock symbol from Sketch: the glass pill, the icons, and the progressive-blur background strip behind it. To use it on a page, add `<script src="/dock.js"></script>` at the end of `<body>` (which should be `position: relative`)
+The navigation Dock at the bottom of the page. Includes the glass pill, the icons, and the progressive-blur background. To use it on a page, add `<script src="/dock.js"></script>` at the end of `<body>` (which should be `position: relative`)
+
+### Sidebar (`sidebar.css`, `sidebar.js`)
+Sidebars used across portfolio pages. Includes title, headings, body-text links, and the progressive-blur background. Add `<link rel="stylesheet" href="/sidebar.css">` to `<head>`, put a `<nav class="sidebar">` after the page content (the markup and classes are documented at the top of `sidebar.css`: `.sidebar-title`, `.sidebar-heading`, `.sidebar-group`, `.sidebar-list` / `.sidebar-text`), and add `<script src="/sidebar.js"></script>` at the end of `<body>`. The script builds the blur strip. `sidebar.css` also defines `.glow-text`, the gradient-glow heading style, which pages can use for their own headings.
 
 ### Fonts (`font.css`)
-Every cut of Futura Now Headline in `font/` (Thin 100 → ExtraBlack 950, each with an italic), declared once. Add `<link rel="stylesheet" href="/font.css">` to a page's `<head>`, then use `font-family: 'FuturaNowHeadline'` with the `font-weight` / `font-style` you want. Dropping a new weight into `font/` also means adding a `@font-face` for it here.
+Futura Now Headline in `font/` (Thin 100 → ExtraBlack 950, each with an italic). Add `<link rel="stylesheet" href="/font.css">` to a page's `<head>`, then use `font-family: 'FuturaNowHeadline'` with the `font-weight` / `font-style` you want.
