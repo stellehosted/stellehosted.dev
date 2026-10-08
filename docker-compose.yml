@@ -9,6 +9,8 @@ services:
       - NAVIDROME_USER=${NAVIDROME_USER}
       - NAVIDROME_PASSWORD=${NAVIDROME_PASSWORD}
       - NAVIDROME_USERNAME_FILTER=${NAVIDROME_USERNAME_FILTER:-}
+    volumes:
+      - ./content:/app/content
     networks:
       - stellehosted.dev
     ports:

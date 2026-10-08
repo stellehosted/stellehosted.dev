@@ -18,6 +18,8 @@ const NAVIDROME_PASSWORD = process.env.NAVIDROME_PASSWORD;
 const NAVIDROME_USERNAME_FILTER = process.env.NAVIDROME_USERNAME_FILTER;
 
 const SITE_ROOT = path.join(__dirname, '..');
+// Uploaded content (art, later photos/blog). A volume in Docker (./content), so it can be a Samba share.
+const CONTENT_DIR = path.join(SITE_ROOT, 'content');
 const NOWPLAYING_CACHE_MS = 8000;
 
 if (!NAVIDROME_USER || !NAVIDROME_PASSWORD) {
@@ -114,7 +116,103 @@ const MIME = {
   '.html': 'text/html', '.css': 'text/css', '.js': 'application/javascript',
   '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg',
   '.jpeg': 'image/jpeg', '.ttf': 'font/ttf', '.json': 'application/json',
+  '.webp': 'image/webp', '.avif': 'image/avif', '.gif': 'image/gif',
 };
+
+// ---- Art content -----------------------------------------------------------------------------
+// No database and no metadata files: the folder *is* the content. Drop files in and they show up.
+//   content/art/ocs/<Name>.png            one OC card each. A leading "01 " sets the order.
+//   content/art/ocs/colors.json           optional card gradients: { "Stelle": ["#b39ef2", "#6248b3"] }
+//   content/art/<YYYY-MM-DD Title>.png    one timeline stop each. No date in the name = file's modified date.
+const IMAGE_EXT = new Set(['.png', '.jpg', '.jpeg', '.webp', '.avif', '.gif']);
+const byName = new Intl.Collator(undefined, { numeric: true }).compare;
+const DEFAULT_OC_COLORS = [['#b39ef2', '#6248b3'], ['#889bea', '#8616b3'], ['#9dd4ff', '#24107e']];
+
+const contentUrl = (...parts) => '/content/' + parts.map(encodeURIComponent).join('/');
+
+// Image filenames in a folder, skipping dotfiles (.DS_Store, Samba/macOS "._*" droppings).
+async function listImages(dir) {
+  try {
+    const entries = await fs.promises.readdir(dir, { withFileTypes: true });
+    return entries
+      .filter((e) => e.isFile() && !e.name.startsWith('.') && IMAGE_EXT.has(path.extname(e.name).toLowerCase()))
+      .map((e) => e.name)
+      .sort(byName);
+  } catch {
+    return [];   // folder doesn't exist yet
+  }
+}
+
+async function readJson(file) {
+  try {
+    return JSON.parse(await fs.promises.readFile(file, 'utf8'));
+  } catch {
+    return {};
+  }
+}
+
+async function scanArt() {
+  const artDir = path.join(CONTENT_DIR, 'art');
+  const ocsDir = path.join(artDir, 'ocs');
+
+  const colors = await readJson(path.join(ocsDir, 'colors.json'));
+  const colorFor = (name) => {
+    const key = Object.keys(colors).find((k) => k.toLowerCase() === name.toLowerCase());
+    return key && Array.isArray(colors[key]) ? colors[key] : null;
+  };
+  const ocs = (await listImages(ocsDir)).map((file, i) => {
+    const name = path.parse(file).name.replace(/^\d+[\s._-]+/, '');
+    const [from, to] = colorFor(name) || DEFAULT_OC_COLORS[i % DEFAULT_OC_COLORS.length];
+    return { name, image: contentUrl('art', 'ocs', file), from, to };
+  });
+
+  const pieces = await Promise.all((await listImages(artDir)).map(async (file) => {
+    const base = path.parse(file).name;
+    const m = base.match(/^(\d{4}-\d{2}-\d{2})(?:[\s_-]+(.*))?$/);
+    const date = m ? m[1] : (await fs.promises.stat(path.join(artDir, file))).mtime.toISOString().slice(0, 10);
+    const title = (m ? m[2] : base) || 'Untitled';
+    return { title, date, image: contentUrl('art', file) };
+  }));
+  pieces.sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : byName(a.title, b.title)));
+
+  return { ocs, pieces };
+}
+
+// Serves uploaded files. Unlike the site's own files these are big, so revalidate with
+// Last-Modified (304 when unchanged) instead of re-sending the image on every visit.
+function serveContent(req, res, urlPath) {
+  let rel;
+  try {
+    rel = decodeURIComponent(urlPath.slice('/content/'.length));
+  } catch {
+    res.writeHead(400).end();
+    return;
+  }
+  const filePath = path.resolve(CONTENT_DIR, rel);
+  if (!filePath.startsWith(CONTENT_DIR + path.sep) || path.basename(filePath).startsWith('.')) {
+    res.writeHead(403).end();
+    return;
+  }
+  fs.stat(filePath, (err, stat) => {
+    if (err || !stat.isFile()) {
+      res.writeHead(404).end('Not found');
+      return;
+    }
+    const lastModified = stat.mtime.toUTCString();
+    const headers = {
+      'Content-Type': MIME[path.extname(filePath).toLowerCase()] || 'application/octet-stream',
+      'Cache-Control': 'no-cache',
+      'Last-Modified': lastModified,
+    };
+    const since = Date.parse(req.headers['if-modified-since']);
+    if (since && Math.floor(stat.mtimeMs / 1000) * 1000 <= since) {
+      res.writeHead(304, headers).end();
+      return;
+    }
+    res.writeHead(200, { ...headers, 'Content-Length': stat.size });
+    fs.createReadStream(filePath).on('error', () => res.destroy()).pipe(res);
+  });
+}
 
 function serveStatic(req, res, urlPath) {
   let rel;
@@ -159,11 +257,28 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
+  if (url.pathname === '/api/art') {
+    try {
+      const data = await scanArt();
+      res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-cache' });
+      res.end(JSON.stringify(data));
+    } catch (err) {
+      console.error('[art] scan failed:', err.message);
+      res.writeHead(500).end();
+    }
+    return;
+  }
+
+  if (url.pathname.startsWith('/content/')) {
+    serveContent(req, res, url.pathname);
+    return;
+  }
+
   serveStatic(req, res, url.pathname);
 });
 
 server.listen(PORT, () => {
-  console.log(`stellehosted.dev listening on :${PORT} (Navidrome: ${NAVIDROME_URL})`);
+  console.log(`stellehosted.dev listening on :${PORT} (Navidrome: ${NAVIDROME_URL}, content: ${CONTENT_DIR})`);
 });
 
 process.on('SIGTERM', () => process.exit(0));

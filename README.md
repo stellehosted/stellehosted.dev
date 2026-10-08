@@ -12,6 +12,25 @@ Hello World~! Here's everything you should know about me. Did I mention the Now 
 
 More pages coming soon...
 
+### art.html
+My art portfolio over the years!
+
+---
+# Adding Content
+Drop everything in `content/` (Docker: `./content` -> `/app/content`)
+
+### Art (`/art`)
+```
+content/art/
+  ocs/
+    01 Stelle.png         one card per image; the name is the filename, a leading number sets the order
+    02 Ace.png
+    colors.json           optional gradients behind transparent art: {"Stelle": ["#b39ef2", "#6248b3"]}
+  2026-05-07 Everything I Learned and Loved.png    one timeline stop per image: "date title"
+  2025-03-14 Untitled.jpg                          no date in the name = the file's modified date
+```
+Newest stops come first, and the sidebar's year links are built from them. `png`, `jpg`, `webp`, `avif` and `gif` all work. Files starting with `.` (macOS/Samba junk) are ignored. The server lists the folder on each request via `/api/art`, and serves the files from `/content/...`.
+
 ---
 # Shared components
 ## Dock (`dock.js`, `dock.css`, `dock.svg`)
