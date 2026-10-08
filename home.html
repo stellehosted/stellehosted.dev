@@ -138,13 +138,24 @@
     gap: 2.5rem;
     padding: 0.833rem 1.667rem;
   }
+  /* The link is the hitbox (.fx-hit, see fx.css); its contents (.fx) scale and glow on hover.
+     The ::before pads the hit area a little beyond the avatar + text (0.5rem tall, 0.75rem wide)
+     and stays well inside the 2.5rem gap, so neighbours never overlap or touch. It's out of
+     flow, so layout is unchanged. */
   .social-item {
-    display: flex; align-items: center; gap: 0.417rem;
+    position: relative; align-self: stretch;
+    display: flex; align-items: center;
     font-size: 1.0417rem;
     color: #f2f0fb;
     text-decoration: none;
     white-space: nowrap;
   }
+  .social-item::before {
+    content: ""; position: absolute;
+    inset: -0.5rem -0.75rem;
+    border-radius: 0.833rem;
+  }
+  .social-item .fx { display: flex; align-items: center; gap: 0.417rem; }
   .social-item .avatar {
     width: 1.5625rem; height: 1.5625rem;
     border-radius: 50%;
@@ -240,14 +251,14 @@
   <p class="hero-tagline">A computer person &amp; an arts person smashed into one</p>
 
   <div class="socials glass-secondary">
-    <a class="social-item" href="https://www.instagram.com/stellehosted/">
-      <span class="avatar" style="background-image:url('branding/Personal.png')"></span>@stellehosted
+    <a class="social-item fx-hit" href="https://www.instagram.com/stellehosted/">
+      <span class="fx"><span class="avatar" style="background-image:url('branding/Personal.png')"></span>@stellehosted</span>
     </a>
-    <a class="social-item" href="https://www.instagram.com/artgazestelle/">
-      <span class="avatar" style="background-image:url('branding/Sakura.png')"></span>@artgazestelle
+    <a class="social-item fx-hit" href="https://www.instagram.com/artgazestelle/">
+      <span class="fx"><span class="avatar" style="background-image:url('branding/Sakura.png')"></span>@artgazestelle</span>
     </a>
-    <a class="social-item" href="https://www.instagram.com/stevesun28/">
-      <span class="avatar" style="background-image:url('branding/School.png')"></span>@stevesun28
+    <a class="social-item fx-hit" href="https://www.instagram.com/stevesun28/">
+      <span class="fx"><span class="avatar" style="background-image:url('branding/School.png')"></span>@stevesun28</span>
     </a>
   </div>
   <svg class="glass-rim rim-socials" viewBox="0 0 633 62" preserveAspectRatio="none">
@@ -292,6 +303,7 @@
 
 </div>
 
+<script src="fx.js" data-fx></script>
 <script src="dock.js"></script>
 <script src="nowplaying.js?v=4"></script>
 </body>
