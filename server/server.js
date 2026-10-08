@@ -222,7 +222,9 @@ function serveStatic(req, res, urlPath) {
     res.writeHead(400).end();
     return;
   }
+  // Clean URLs: "/" is the home page, and extensionless paths map to a page ("/art" -> art.html).
   if (rel === '/') rel = '/home.html';
+  else if (!path.extname(rel)) rel = rel.replace(/\/$/, '') + '.html';
   const filePath = path.normalize(path.join(SITE_ROOT, rel));
   if (!filePath.startsWith(SITE_ROOT)) {
     res.writeHead(403).end();

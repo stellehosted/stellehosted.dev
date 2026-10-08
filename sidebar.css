@@ -1,0 +1,75 @@
+/* ===== sidebar component (shared across pages: see sidebar.js) =====
+   The left column from the Sketch pages: a 384px-wide sidebar pinned to the left of the 1920x1080
+   design canvas, over a dark, blurred strip that runs to the window's left edge. Sizes are in rem,
+   so it scales with the canvas (see the unit system in each page). Text inherits the page's font
+   (FuturaNowHeadline) and expects a dark background.
+
+   Markup (the .sidebar-bg strip is added by sidebar.js, directly before .sidebar):
+     <nav class="sidebar">
+       <h1 class="sidebar-title">Art</h1>
+       <a class="sidebar-heading" href="#a">Heading</a>
+       <div class="sidebar-group">
+         <a class="sidebar-heading" href="#b">Heading</a>
+         <ul class="sidebar-list"><li><a href="#c">Body text link</a></li></ul>
+       </div>
+     </nav>
+   Put it after the page content in the DOM: the strip blurs whatever paints before it. */
+
+/* Headings share one look: white 75% -> 100% vertical gradient fill with a soft white glow. The
+   glow is a drop-shadow filter rather than text-shadow because the fill is clipped to the glyphs
+   (a text-shadow would show through the transparent fill). Sidebar titles and headings use it, and
+   so can a page's own section headings via class="glow-text". */
+.glow-text, .sidebar-title, .sidebar-heading {
+  display: inline-block;
+  background: linear-gradient(to bottom, rgba(255,255,255,0.75), #fff);
+  -webkit-background-clip: text; background-clip: text;
+  color: transparent;
+  font-weight: 800;   /* Sketch weight 11 */
+  line-height: 1.1;
+  filter: drop-shadow(0 0.208rem 0.833rem rgba(255,255,255,0.25));
+}
+
+/* Content: vertically centered stack, left edge at x=100. The column itself ignores the pointer so
+   the wheel still scrolls the page behind it; only the links are interactive. */
+.sidebar {
+  position: fixed;
+  left: calc(50% - 50rem); top: calc(50% - 28.125rem);
+  width: 20rem; height: 56.25rem;
+  box-sizing: border-box;
+  display: flex; flex-direction: column; justify-content: center;
+  padding-left: 5.208rem;
+  gap: 3.333rem;
+  pointer-events: none;
+}
+.sidebar a { pointer-events: auto; color: inherit; text-decoration: none; }
+.sidebar h1, .sidebar ul { margin: 0; padding: 0; list-style: none; }
+
+.sidebar-title   { font-size: 4.1667rem; font-weight: 900; filter: drop-shadow(0 0.625rem 1.25rem rgba(255,255,255,0.25)); }   /* Sketch weight 14 */
+.sidebar-heading { font-size: 2.0833rem; }
+.sidebar-group { display: flex; flex-direction: column; align-items: flex-start; gap: 1.042rem; }
+.sidebar-list { display: flex; flex-direction: column; gap: 1.042rem; }
+.sidebar-text, .sidebar-list a { display: block; font-size: 1.0417rem; font-weight: 400; line-height: 1.05; color: #fff; }
+.sidebar a { transition: opacity 0.15s ease; }
+.sidebar a:hover { opacity: 0.7; }
+
+/* Sidebar BG: black 50% -> transparent left-to-right over the 384px, plus a background blur. Fixed
+   and full height so it never stops short of the viewport on tall screens, and it starts at the
+   window's left edge so letterbox bars are covered too. */
+.sidebar-bg {
+  --r: 0.833rem;
+  position: fixed; top: 0; bottom: 0; left: 0;
+  width: calc(50vw - 50rem + 20rem);   /* any letterbox bar + the 384px sidebar */
+  background: linear-gradient(to right, rgba(0,0,0,0.5) calc(100% - 20rem), rgba(0,0,0,0));
+  pointer-events: none;
+}
+/* Blur ramps from 16px at the sidebar's left edge to 0 at x=384: the same 6 stacked, masked
+   backdrop-blur layers as the dock's strip, turned sideways. (One big masked layer renders in
+   Safari as a hard-edged band instead of a fade.) */
+.sidebar-bg .blur { position: absolute; top: 0; bottom: 0; right: 0; width: 20rem; overflow: hidden; }
+.sidebar-bg .layer {
+  position: absolute; inset: 0;
+  backdrop-filter: blur(calc(var(--r) * var(--i) / 6));
+  -webkit-backdrop-filter: blur(calc(var(--r) * var(--i) / 6));
+  -webkit-mask-image: linear-gradient(to left, transparent calc((var(--i) - 1) * 100% / 6), #000 calc(var(--i) * 100% / 6), transparent calc((var(--i) + 1) * 100% / 6));
+  mask-image: linear-gradient(to left, transparent calc((var(--i) - 1) * 100% / 6), #000 calc(var(--i) * 100% / 6), transparent calc((var(--i) + 1) * 100% / 6));
+}
