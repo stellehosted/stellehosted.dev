@@ -1,6 +1,7 @@
 Working/
+content/
 .env
 
-.git
 .claude/
 .DS_Store
+.git
