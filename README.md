@@ -3,9 +3,7 @@ My personal website, and a perpetual work in progress...
 
 ---
 # Deployment
-- `stellehosted.dev`, `cloudflared`, & `navidrome` → Docker network (stellehosted.dev)
-- `cloudflared` proxy → http://stellehosted.dev:8080
-- No need to port forward anything!
+- `stellehosted.dev` & `navidrome` → Docker network (stellehosted.dev)
 
 ---
 # Pages

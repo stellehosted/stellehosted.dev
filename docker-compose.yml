@@ -11,16 +11,8 @@ services:
       - NAVIDROME_USERNAME_FILTER=${NAVIDROME_USERNAME_FILTER:-}
     networks:
       - stellehosted.dev
-    restart: unless-stopped
-
-  cloudflared:
-    container_name: "cloudflared"
-    image: cloudflare/cloudflared:latest
-    command: tunnel --no-autoupdate run
-    environment:
-      - TUNNEL_TOKEN=${TUNNEL_TOKEN}
-    networks:
-      - stellehosted.dev
+    ports:
+      - 1030:8080
     restart: unless-stopped
 
 networks:
