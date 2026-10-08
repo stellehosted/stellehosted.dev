@@ -8,6 +8,7 @@
 <link rel="icon" href="/branding/favicon.png" type="image/png" sizes="256x256">
 <link rel="apple-touch-icon" href="/branding/apple-touch-icon.png">
 <link rel="stylesheet" href="/font.css">
+<link rel="stylesheet" href="/sidebar.css">
 <style>
   /* Same unit system as home.html: 1rem == 1 real Sketch unit on the 1920x1080 canvas, so every measurement below is the Sketch ("Art" frame) value / 19.2. Asset URLs are absolute because this page is served at /art (and /art/). */
   html {
@@ -33,66 +34,10 @@
     background-position: center;
   }
 
-  /* ===== layers, back to front (DOM order): .bg, .sidebar-bg, .scroller, .canvas =====
-     The scroller sits under .canvas, so the sidebar text paints over it, and the dock (appended to
-     <body> by dock.js, along with its own blur strip) paints over everything and blurs what scrolls beneath. Same rule as home.html:
-     .canvas has no transform / z-index, or the dock rims' overlay blend would stop seeing the page. */
-  .canvas {
-    position: absolute;
-    left: calc(50% - 50rem); top: calc(50% - 28.125rem);
-    width: 100rem;
-    height: 56.25rem;
-    pointer-events: none;   /* wheel/touch fall through to .scroller... */
-  }
-  .canvas .sidebar { pointer-events: auto; }   /* ...except on the clickable sidebar (the dock re-enables its own) */
-
-  /* Sidebar BG: 384px, black 50% -> transparent left-to-right, background blur 16. Fixed and full
-     height so it never stops short of the viewport on tall screens. */
-  .sidebar-bg {
-    position: fixed; top: 0; bottom: 0; left: 0;
-    width: calc(50vw - 50rem + 20rem);   /* any letterbox bar + the 384px sidebar */
-    --r: 0.833rem;
-    background: linear-gradient(to right, rgba(0,0,0,0.5) calc(100% - 20rem), rgba(0,0,0,0));
-  }
-  /* Blur ramps from 16px at the sidebar's left edge to 0 at x=384: the same 6 stacked, masked
-     backdrop-blur layers as the dock's strip, turned sideways. (One big masked layer renders in
-     Safari as a hard-edged band instead of a fade.) */
-  .sidebar-bg .blur { position: absolute; top: 0; bottom: 0; right: 0; width: 20rem; overflow: hidden; }
-  .sidebar-bg .layer {
-    position: absolute; inset: 0;
-    backdrop-filter: blur(calc(var(--r) * var(--i) / 6));
-    -webkit-backdrop-filter: blur(calc(var(--r) * var(--i) / 6));
-    -webkit-mask-image: linear-gradient(to left, transparent calc((var(--i) - 1) * 100% / 6), #000 calc(var(--i) * 100% / 6), transparent calc((var(--i) + 1) * 100% / 6));
-    mask-image: linear-gradient(to left, transparent calc((var(--i) - 1) * 100% / 6), #000 calc(var(--i) * 100% / 6), transparent calc((var(--i) + 1) * 100% / 6));
-  }
-
-  /* ===== sidebar content: vertically centered stack, left edge at x=100 ===== */
-  .sidebar {
-    position: absolute; left: 0; top: 0;
-    width: 20rem; height: 56.25rem;
-    display: flex; flex-direction: column; justify-content: center;
-    padding-left: 5.208rem;
-    gap: 3.333rem;
-  }
-  /* Headings share one look: white 75% -> 100% vertical gradient fill with a soft white glow.
-     The glow is a drop-shadow filter rather than text-shadow because the fill is clipped to the
-     glyphs (a text-shadow would show through the transparent fill). */
-  .glow-text {
-    display: inline-block;
-    background: linear-gradient(to bottom, rgba(255,255,255,0.75), #fff);
-    -webkit-background-clip: text; background-clip: text;
-    color: transparent;
-    font-weight: 800;   /* Sketch weight 11: section headings and sidebar links */
-    line-height: 1.1;
-    filter: drop-shadow(0 0.208rem 0.833rem rgba(255,255,255,0.25));
-  }
-  .side-title { font-size: 4.1667rem; font-weight: 900;   /* Sketch weight 14 */
-    filter: drop-shadow(0 0.625rem 1.25rem rgba(255,255,255,0.25)); }
-  .side-link  { font-size: 2.0833rem; }
-  .side-more { display: flex; flex-direction: column; gap: 1.042rem; align-items: flex-start; }
-  .side-years { display: flex; flex-direction: column; gap: 1.042rem; list-style: none; }
-  .side-years a { display: block; font-size: 1.0417rem; line-height: 1.05; transition: opacity 0.15s ease; }
-  .side-years a:hover, .side-link:hover { opacity: 0.7; }
+  /* ===== layers, back to front (DOM order): .bg, .scroller, then the sidebar (its blur strip +
+     nav, from sidebar.js), then the dock (appended to <body> by dock.js, along with its own blur strip).
+     Neither component has a transform / z-index, or the dock rims' overlay blend would stop seeing
+     the page. They rely on being later in the DOM to paint over the scroller. */
 
   /* ===== scrolling content ===== */
   /* Starts at the top of the letterboxed canvas so nothing scrolls into the top bar, but runs to the
@@ -115,7 +60,7 @@
     padding: 5.208rem 0 12rem;
   }
   .content section { scroll-margin-top: 5.208rem; }
-  .content h2 { font-size: 2.0833rem; }
+  .content h2 { font-size: 2.0833rem; }   /* class="glow-text" comes from sidebar.css */
 
   /* OC's: three 385x500 cards, gap 32 */
   .ocs { display: flex; gap: 1.667rem; margin-top: 1.042rem; }
@@ -200,17 +145,6 @@
 <body>
 
 <div class="bg"></div>
-<div class="sidebar-bg">
-  <div class="blur">
-    <div class="layer" style="--i:1"></div>
-    <div class="layer" style="--i:2"></div>
-    <div class="layer" style="--i:3"></div>
-    <div class="layer" style="--i:4"></div>
-    <div class="layer" style="--i:5"></div>
-    <div class="layer" style="--i:6"></div>
-  </div>
-</div>
-
 <main class="scroller">
   <div class="content">
 
@@ -266,22 +200,21 @@
   </div>
 </main>
 
-<div class="canvas">
-  <nav class="sidebar">
-    <h1 class="glow-text side-title">Art</h1>
-    <a class="glow-text side-link" href="#ocs">OC’s</a>
-    <div class="side-more">
-      <a class="glow-text side-link" href="#more">More</a>
-      <ul class="side-years">
-        <li><a href="#y2026">2026</a></li>
-        <li><a href="#y2025">2025</a></li>
-        <li><a href="#y2024">2024</a></li>
-        <li><a href="#y2023">2023</a></li>
-      </ul>
-    </div>
-  </nav>
-</div>
+<nav class="sidebar">
+  <h1 class="sidebar-title">Art</h1>
+  <a class="sidebar-heading" href="#ocs">OC’s</a>
+  <div class="sidebar-group">
+    <a class="sidebar-heading" href="#more">More</a>
+    <ul class="sidebar-list">
+      <li><a href="#y2026">2026</a></li>
+      <li><a href="#y2025">2025</a></li>
+      <li><a href="#y2024">2024</a></li>
+      <li><a href="#y2023">2023</a></li>
+    </ul>
+  </div>
+</nav>
 
+<script src="/sidebar.js"></script>
 <script src="/dock.js"></script>
 </body>
 </html>
