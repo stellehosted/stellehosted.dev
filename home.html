@@ -92,10 +92,6 @@
   .path-band { --r: 1.667rem; height: 33.854rem; }
   .path-band .tint { background: linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 100%); }
 
-  /* Dock BG shape: 176px band, progressive Glass blur 0->16px, gradient wash 0%->50% black */
-  .dock-strip { --r: 0.833rem; height: 9.167rem; }
-  .dock-strip .tint { background: linear-gradient(to top, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0) 100%); }
-
   /* Reusable "Glass (Secondary)" surface: frosted fill + outside gradient rim light */
   .glass-secondary {
     --glass-radius: 1.25rem;
@@ -233,7 +229,6 @@
   .np-meta { margin-top: 0.417rem; font-size: 1.0417rem; color: rgba(255,255,255,0.5); }
 
 </style>
-<link rel="stylesheet" href="dock.css">
 </head>
 <body>
 
@@ -241,15 +236,6 @@
 
 <div class="blur-layer">
   <div class="blur-band path-band">
-    <div class="layer" style="--i:1"></div>
-    <div class="layer" style="--i:2"></div>
-    <div class="layer" style="--i:3"></div>
-    <div class="layer" style="--i:4"></div>
-    <div class="layer" style="--i:5"></div>
-    <div class="layer" style="--i:6"></div>
-    <div class="tint"></div>
-  </div>
-  <div class="blur-band dock-strip">
     <div class="layer" style="--i:1"></div>
     <div class="layer" style="--i:2"></div>
     <div class="layer" style="--i:3"></div>
@@ -317,8 +303,6 @@
     </linearGradient></defs>
     <rect id="np-album-rim-rect" x="1" y="1" width="126" height="126" rx="23" fill="none" stroke="url(#rimGradAlbum)" stroke-width="2"></rect>
   </svg>
-
-  <div class="dock-wrap"></div>
 
 </div>
 

@@ -1,16 +1,64 @@
 /* ===== dock component (shared across pages: see dock.svg + dock.js) =====
    No transform or z-index on .dock-wrap: either would make it an isolated group and the
    dock's overlay-blended rims would stop seeing the page behind them. It relies on being
-   last in the DOM to sit on top. */
+   last in the DOM to sit on top, and on <body> being position:relative so `bottom` means the
+   bottom of the window. Sizes are in rem, so the dock scales with the 1920x1080 design canvas. */
 .dock-wrap {
   position: absolute;
   left: calc(50% - 19.505rem); bottom: -2.76rem;
   width: 39.010rem; height: 14.635rem;
+  pointer-events: auto;   /* stays clickable even if a page sets pointer-events: none on its content */
 }
 .dock-wrap svg { width: 100%; height: 100%; display: block; overflow: visible; }
+
+/* Dock BG: a full-width, 176px band flush with the bottom of the viewport, painted just under
+   the dock (it comes first in the DOM). Progressive blur: layer i blurs by i/6 of the max and is
+   masked to a triangle peaking at i/6 of the band's height, so the blur radius ramps ~linearly
+   from 0 at the top edge to 16px at the bottom. position:fixed is deliberate, see dock.js. */
+.dock-bg {
+  --r: 0.833rem;
+  position: fixed; left: 0; right: 0; bottom: 0;
+  height: 9.167rem;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.dock-bg .layer, .dock-bg .tint { position: absolute; inset: 0; }
+.dock-bg .layer {
+  backdrop-filter: blur(calc(var(--r) * var(--i) / 6));
+  -webkit-backdrop-filter: blur(calc(var(--r) * var(--i) / 6));
+  -webkit-mask-image: linear-gradient(to bottom, transparent calc((var(--i) - 1) * 100% / 6), #000 calc(var(--i) * 100% / 6), transparent calc((var(--i) + 1) * 100% / 6));
+  mask-image: linear-gradient(to bottom, transparent calc((var(--i) - 1) * 100% / 6), #000 calc(var(--i) * 100% / 6), transparent calc((var(--i) + 1) * 100% / 6));
+}
+.dock-bg .tint { background: linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 100%); }
+/* Per-pill 16px background blur (Sketch "Glass"), built in dock.js. Same box as .dock-wrap so
+   the panes' %-of-viewBox geometry lines up with the svg; sits between the BG strip and the
+   dock svg in paint order. Fixed for the same Safari reason as the rims below. */
+.dock-glass {
+  position: fixed;
+  left: calc(50% - 19.505rem); bottom: -2.76rem;
+  width: 39.010rem; height: 14.635rem;
+  pointer-events: none;
+}
+.dock-glass > div {
+  position: absolute;
+  backdrop-filter: blur(0.833rem);
+  -webkit-backdrop-filter: blur(0.833rem);
+  -webkit-mask-size: 100% 100%; mask-size: 100% 100%;
+  -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
+}
 /* Rims live in a second svg so the blend sits on an HTML-level element (Safari ignores
-   mix-blend-mode on SVG children). Built in dock.js. */
-.dock-wrap svg.dock-rims { position: absolute; inset: 0; pointer-events: none; mix-blend-mode: overlay; }
+   mix-blend-mode on SVG children). Built in dock.js.
+   position:fixed is required, not cosmetic: the page background is a fixed layer, and Safari
+   only blends against it from another fixed layer. A position:absolute overlay (even one at
+   body level) renders as normal blend. Same box as .dock-wrap; body is the viewport, so
+   `bottom` resolves identically. */
+.dock-wrap svg.dock-rims {
+  position: fixed;
+  left: calc(50% - 19.505rem); bottom: -2.76rem;
+  width: 39.010rem; height: 14.635rem;
+  pointer-events: none; mix-blend-mode: overlay;
+}
 .dock-wrap svg .hitbox { fill: transparent; cursor: pointer; }
 .dock-wrap svg .icon-fx {
   transform-box: fill-box;
