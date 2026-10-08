@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Art | stellehosted.dev</title>
+<link rel="icon" href="/branding/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/branding/favicon.png" type="image/png" sizes="256x256">
+<link rel="apple-touch-icon" href="/branding/apple-touch-icon.png">
+<link rel="stylesheet" href="/font.css">
+<link rel="stylesheet" href="/sidebar.css">
+<style>
+  /* Same unit system as home.html: 1rem == 1 real Sketch unit on the 1920x1080 canvas, so every measurement below is the Sketch ("Art" frame) value / 19.2. Asset URLs are absolute because this page is served at /art (and /art/). */
+  html {
+    font-size: min(1vw, 1.7778vh);
+  }
+
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    background: #06060c;
+    font-family: 'FuturaNowHeadline', sans-serif;
+    color: #fff;
+    overflow: hidden;
+    position: relative;
+  }
+  a { color: inherit; text-decoration: none; }
+
+  .bg {
+    position: fixed; inset: 0; z-index: 0;
+    background-image: url('/branding/Banner (Personal).png');
+    background-size: cover;
+    background-position: center;
+  }
+
+  /* ===== layers, back to front (DOM order): .bg, .scroller, then the sidebar (its blur strip +
+     nav, from sidebar.js), then the dock (appended to <body> by dock.js, along with its own blur strip).
+     Neither component has a transform / z-index, or the dock rims' overlay blend would stop seeing
+     the page. They rely on being later in the DOM to paint over the scroller. */
+
+  /* ===== scrolling content ===== */
+  /* Starts at the top of the letterboxed canvas so nothing scrolls into the top bar, but runs to the
+     bottom of the window so content also passes under the dock's blur on tall screens. Full width
+     so the wheel works anywhere across it. */
+  .scroller {
+    position: fixed; left: 0; right: 0; bottom: 0;
+    top: calc(50vh - 28.125rem);
+    overflow-y: auto; overflow-x: hidden;
+    scrollbar-width: none;
+  }
+  .scroller::-webkit-scrollbar { display: none; }
+  @media (prefers-reduced-motion: no-preference) { .scroller { scroll-behavior: smooth; } }
+
+  /* Content column: x=600, 1220 wide, first heading at y=100. Bottom padding lets the last stop
+     scroll clear of the dock. */
+  .content {
+    width: 63.542rem;
+    margin-left: calc(50% - 50rem + 31.25rem);
+    padding: 5.208rem 0 12rem;
+  }
+  .content section { scroll-margin-top: 5.208rem; }
+  .content h2 { font-size: 2.0833rem; }   /* class="glow-text" comes from sidebar.css */
+
+  /* OC's: three 385x500 cards, gap 32 */
+  .ocs { display: flex; gap: 1.667rem; margin-top: 1.042rem; }
+  .card {
+    position: relative; flex: 1 1 0;
+    height: 26.042rem;
+    border-radius: 0.417rem;
+    overflow: hidden;
+    background: linear-gradient(to bottom right, var(--from), var(--to));
+  }
+  /* Drop an <img> in a card and it fills it: <article class="card"><img src="..."> */
+  .card > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  /* "Name BG": 137px frosted band, slanted top edge (points from the Sketch shape) */
+  .card-band {
+    position: absolute; left: 0; right: 0; bottom: 0;
+    height: 7.167rem;
+    background: rgba(255,255,255,0.05);
+    backdrop-filter: blur(0.833rem);
+    -webkit-backdrop-filter: blur(0.833rem);
+    clip-path: polygon(0 100%, 0 44.78%, 99.83% 0, 100% 100%);
+  }
+  .card-name {
+    position: absolute; right: 2.5rem; bottom: 1.667rem;
+    font-size: 2.0833rem; font-weight: 700; line-height: 1.1;
+    color: #fff;
+    /* 4px outside stroke: a centered stroke of 8px painted *under* the fill */
+    -webkit-text-stroke: 0.4167rem #141414;
+    paint-order: stroke fill;
+    stroke-linejoin: round;
+  }
+
+  /* More: timeline. Each .stop is one piece of art: [art 375x500] [timeline column 32] [title/date].
+     The line runs unbroken from one stop to the next (see the margin note below). */
+  .more { margin-top: 3.333rem; }
+  .stops { margin-top: 1.042rem; }
+  .stop {
+    display: grid;
+    grid-template-columns: 19.531rem 3.333rem 1.667rem 1.667rem 1fr;   /* art | 64 gap | timeline | 32 gap | text */
+    scroll-margin-top: 5.208rem;
+  }
+  /* The 64px between stops is margin on the art, not padding on the row, so it's *inside* the row
+     and the timeline column (which stretches to the row's height) spans it. */
+  .stop:not(:last-child) .stop-art { margin-bottom: 3.333rem; }
+  .stop-art {
+    position: relative;
+    height: 26.042rem;
+    border-radius: 0.417rem;
+    overflow: hidden;
+    box-shadow: 0 0 1.667rem rgba(0,0,0,0.5);
+    background: linear-gradient(to bottom right, rgba(255,255,255,0.1), rgba(255,255,255,0.03));
+  }
+  .stop-art > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+
+  /* The "stop": a 32px ring with 5px lines above and below, ring centered 80px down the row.
+     The ring is hollow, so the two lines are separate pieces that end at its edges. */
+  .tl { position: relative; grid-column: 3; }
+  .tl::before, .tl::after {
+    content: "";
+    position: absolute; left: calc(50% - 0.1302rem);
+    width: 0.2604rem;
+    background: #fff;
+  }
+  .tl::before { top: 0; height: 3.333rem; }
+  .tl::after  { top: 5rem; bottom: 0; }
+  .stop:last-child .tl::after { display: none; }
+  .tl-dot {
+    position: absolute; left: 0; top: 3.333rem;
+    width: 1.667rem; height: 1.667rem;
+    border: 0.2604rem solid #fff;
+    border-radius: 50%;
+  }
+
+  /* Text block: title's vertical center lines up with the ring's center (58px + half a 44px line) */
+  .stop-text { grid-column: 5; padding-top: 3.021rem; }
+  .stop-title { font-size: 2.0833rem; font-weight: 700; line-height: 1.1; }
+  .stop-date { font-size: 1.0417rem; line-height: 1.6; }
+  .empty { margin-top: 1.042rem; font-size: 1.0417rem; opacity: 0.6; }
+</style>
+</head>
+<body>
+
+<div class="bg"></div>
+<main class="scroller">
+  <div class="content">
+
+    <section id="ocs">
+      <h2 class="glow-text">OC’s</h2>
+      <div class="ocs" id="ocs-list"></div>
+    </section>
+
+    <section id="more" class="more">
+      <h2 class="glow-text">More</h2>
+      <div class="stops" id="stops"></div>
+    </section>
+
+  </div>
+</main>
+
+<nav class="sidebar">
+  <h1 class="sidebar-title">Art</h1>
+  <a class="sidebar-heading" href="#ocs">OC’s</a>
+  <div class="sidebar-group">
+    <a class="sidebar-heading" href="#more">More</a>
+    <ul class="sidebar-list" id="years"></ul>
+  </div>
+</nav>
+
+<script>
+  // Content comes from the server's /api/art, which lists whatever is in content/art (see README
+  // "Adding content"). Everything is built with textContent / DOM nodes, never innerHTML.
+  const el = (tag, className, text) => {
+    const node = document.createElement(tag);
+    if (className) node.className = className;
+    if (text !== undefined) node.textContent = text;
+    return node;
+  };
+  const img = (src, alt) => {
+    const node = el('img');
+    node.src = src; node.alt = alt;
+    node.loading = 'lazy'; node.decoding = 'async';
+    return node;
+  };
+  const empty = (parent) => parent.appendChild(el('p', 'empty', 'Nothing here yet.'));
+
+  function renderOcs(ocs) {
+    const list = document.getElementById('ocs-list');
+    if (!ocs.length) return empty(list);
+    for (const oc of ocs) {
+      const card = el('article', 'card');
+      card.style.setProperty('--from', oc.from);
+      card.style.setProperty('--to', oc.to);
+      card.append(img(oc.image, oc.name), el('div', 'card-band'), el('div', 'card-name', oc.name));
+      list.appendChild(card);
+    }
+  }
+
+  // Pieces arrive newest first. The first stop of each year gets id="y<year>" for the sidebar link.
+  function renderStops(pieces) {
+    const stops = document.getElementById('stops');
+    const years = document.getElementById('years');
+    if (!pieces.length) return empty(stops);
+    const seen = new Set();
+    for (const piece of pieces) {
+      const stop = el('article', 'stop');
+      const year = piece.date.slice(0, 4);
+      if (!seen.has(year)) {
+        seen.add(year);
+        stop.id = 'y' + year;
+        const link = el('a', '', year);
+        link.href = '#y' + year;
+        years.appendChild(el('li')).appendChild(link);
+      }
+      const art = el('div', 'stop-art');
+      art.appendChild(img(piece.image, piece.title));
+      const dot = el('div', 'tl');
+      dot.appendChild(el('span', 'tl-dot'));
+      const text = el('div', 'stop-text');
+      text.append(el('h3', 'stop-title', piece.title), el('p', 'stop-date', piece.date));
+      stop.append(art, dot, text);
+      stops.appendChild(stop);
+    }
+  }
+
+  fetch('/api/art')
+    .then((res) => res.json())
+    .then(({ ocs, pieces }) => { renderOcs(ocs); renderStops(pieces); })
+    .catch(() => { empty(document.getElementById('ocs-list')); empty(document.getElementById('stops')); });
+</script>
+<script src="/sidebar.js"></script>
+<script src="/dock.js"></script>
+</body>
+</html>
