@@ -91,9 +91,6 @@
     paint-order: stroke fill;
     stroke-linejoin: round;
   }
-  .card-stelle { --from: #b39ef2; --to: #6248b3; }
-  .card-ace    { --from: #889bea; --to: #8616b3; }
-  .card-os     { --from: #9dd4ff; --to: #24107e; }
 
   /* More: timeline. Each .stop is one piece of art: [art 375x500] [timeline column 32] [title/date].
      The line runs unbroken from one stop to the next (see the margin note below). */
@@ -140,6 +137,7 @@
   .stop-text { grid-column: 5; padding-top: 3.021rem; }
   .stop-title { font-size: 2.0833rem; font-weight: 700; line-height: 1.1; }
   .stop-date { font-size: 1.0417rem; line-height: 1.6; }
+  .empty { margin-top: 1.042rem; font-size: 1.0417rem; opacity: 0.6; }
 </style>
 </head>
 <body>
@@ -150,51 +148,12 @@
 
     <section id="ocs">
       <h2 class="glow-text">OC’s</h2>
-      <div class="ocs">
-        <article class="card card-stelle"><div class="card-band"></div><div class="card-name">Stelle</div></article>
-        <article class="card card-ace"><div class="card-band"></div><div class="card-name">Ace</div></article>
-        <article class="card card-os"><div class="card-band"></div><div class="card-name">OS-tans</div></article>
-      </div>
+      <div class="ocs" id="ocs-list"></div>
     </section>
 
     <section id="more" class="more">
       <h2 class="glow-text">More</h2>
-      <div class="stops">
-        <!-- One .stop per piece, newest first. The first stop of each year gets id="y<year>" so the
-             sidebar's year links can jump to it. Everything below is placeholder content. -->
-        <article class="stop" id="y2026">
-          <div class="stop-art"></div>
-          <div class="tl"><span class="tl-dot"></span></div>
-          <div class="stop-text">
-            <h3 class="stop-title">Everything I Learned and Loved</h3>
-            <p class="stop-date">2026-05-07</p>
-          </div>
-        </article>
-        <article class="stop" id="y2025">
-          <div class="stop-art"></div>
-          <div class="tl"><span class="tl-dot"></span></div>
-          <div class="stop-text">
-            <h3 class="stop-title">Untitled</h3>
-            <p class="stop-date">2025-03-14</p>
-          </div>
-        </article>
-        <article class="stop" id="y2024">
-          <div class="stop-art"></div>
-          <div class="tl"><span class="tl-dot"></span></div>
-          <div class="stop-text">
-            <h3 class="stop-title">Untitled</h3>
-            <p class="stop-date">2024-08-02</p>
-          </div>
-        </article>
-        <article class="stop" id="y2023">
-          <div class="stop-art"></div>
-          <div class="tl"><span class="tl-dot"></span></div>
-          <div class="stop-text">
-            <h3 class="stop-title">Untitled</h3>
-            <p class="stop-date">2023-11-20</p>
-          </div>
-        </article>
-      </div>
+      <div class="stops" id="stops"></div>
     </section>
 
   </div>
@@ -205,15 +164,71 @@
   <a class="sidebar-heading" href="#ocs">OC’s</a>
   <div class="sidebar-group">
     <a class="sidebar-heading" href="#more">More</a>
-    <ul class="sidebar-list">
-      <li><a href="#y2026">2026</a></li>
-      <li><a href="#y2025">2025</a></li>
-      <li><a href="#y2024">2024</a></li>
-      <li><a href="#y2023">2023</a></li>
-    </ul>
+    <ul class="sidebar-list" id="years"></ul>
   </div>
 </nav>
 
+<script>
+  // Content comes from the server's /api/art, which lists whatever is in content/art (see README
+  // "Adding content"). Everything is built with textContent / DOM nodes, never innerHTML.
+  const el = (tag, className, text) => {
+    const node = document.createElement(tag);
+    if (className) node.className = className;
+    if (text !== undefined) node.textContent = text;
+    return node;
+  };
+  const img = (src, alt) => {
+    const node = el('img');
+    node.src = src; node.alt = alt;
+    node.loading = 'lazy'; node.decoding = 'async';
+    return node;
+  };
+  const empty = (parent) => parent.appendChild(el('p', 'empty', 'Nothing here yet.'));
+
+  function renderOcs(ocs) {
+    const list = document.getElementById('ocs-list');
+    if (!ocs.length) return empty(list);
+    for (const oc of ocs) {
+      const card = el('article', 'card');
+      card.style.setProperty('--from', oc.from);
+      card.style.setProperty('--to', oc.to);
+      card.append(img(oc.image, oc.name), el('div', 'card-band'), el('div', 'card-name', oc.name));
+      list.appendChild(card);
+    }
+  }
+
+  // Pieces arrive newest first. The first stop of each year gets id="y<year>" for the sidebar link.
+  function renderStops(pieces) {
+    const stops = document.getElementById('stops');
+    const years = document.getElementById('years');
+    if (!pieces.length) return empty(stops);
+    const seen = new Set();
+    for (const piece of pieces) {
+      const stop = el('article', 'stop');
+      const year = piece.date.slice(0, 4);
+      if (!seen.has(year)) {
+        seen.add(year);
+        stop.id = 'y' + year;
+        const link = el('a', '', year);
+        link.href = '#y' + year;
+        years.appendChild(el('li')).appendChild(link);
+      }
+      const art = el('div', 'stop-art');
+      art.appendChild(img(piece.image, piece.title));
+      const dot = el('div', 'tl');
+      dot.appendChild(el('span', 'tl-dot'));
+      const text = el('div', 'stop-text');
+      text.append(el('h3', 'stop-title', piece.title), el('p', 'stop-date', piece.date));
+      stop.append(art, dot, text);
+      stops.appendChild(stop);
+    }
+  }
+
+  fetch('/api/art')
+    .then((res) => res.json())
+    .then(({ ocs, pieces }) => { renderOcs(ocs); renderStops(pieces); })
+    .catch(() => { empty(document.getElementById('ocs-list')); empty(document.getElementById('stops')); });
+</script>
 <script src="/sidebar.js"></script>
 <script src="/dock.js"></script>
 </body>
