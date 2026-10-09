@@ -38,9 +38,9 @@ content/art/
     1.png  2.png  3.png                            shown in filename order
     description.txt                                (optional) description
 ```
-Click any card or stop to open it in a popup: the image (a carousel with arrows, dots, ←/→ keys and swipe when there are several), the title, the date and the description. Descriptions are plain text; a blank line starts a new paragraph. OC cards work the same way, so `ocs/02 Ace/` can be a folder too.
-
-Newest stops come first, and the sidebar's year links are built from them. Each year shows its first 4 stops and a "Load more" button for the rest, and images load lazily as you scroll. Stops are always 375px wide; the height follows each image's aspect ratio (the server reads the size from the file header). `png`, `jpg`, `webp`, `avif`, `gif` and `heic` all work (HEIC is converted to JPEG by the server on first view). Files starting with `.` (macOS/Samba junk) are ignored. The server lists the folder on each request via `/api/art`, and serves the files from `/content/...`.
+- Stops are fixed 375px wide
+- Images supported: `png`, `jpg`, `webp`, `avif`, `gif` and `heic` all work 
+- Server lists the folder on each request via `/api/art`, and serves the files from `/content/...`.
 
 ---
 # Shared components
@@ -48,7 +48,10 @@ Newest stops come first, and the sidebar's year links are built from them. Each 
 The navigation Dock at the bottom of the page. Includes the glass pill, the icons, and the progressive-blur background. To use it on a page, add `<script src="/dock.js"></script>` at the end of `<body>` (which should be `position: relative`)
 
 ### Sidebar (`sidebar.css`, `sidebar.js`)
-Sidebars used across portfolio pages. Includes title, headings, body-text links, and the progressive-blur background. Add `<link rel="stylesheet" href="/sidebar.css">` to `<head>`, put a `<nav class="sidebar">` after the page content (the markup and classes are documented at the top of `sidebar.css`: `.sidebar-title`, `.sidebar-heading`, `.sidebar-group`, `.sidebar-list` / `.sidebar-text`), and add `<script src="/sidebar.js"></script>` at the end of `<body>`. The script builds the blur strip. `sidebar.css` also defines `.glow-text`, the gradient-glow heading style, which pages can use for their own headings.
+Sidebars used across portfolio pages
+- Title, headings, body-text links, and progressive-blur background
+- Add `<link rel="stylesheet" href="/sidebar.css">` to `<head>`, put a `<nav class="sidebar">` after the page content (the markup and classes are documented at the top of `sidebar.css`: `.sidebar-title`, `.sidebar-heading`, `.sidebar-group`, `.sidebar-list` / `.sidebar-text`), and add `<script src="/sidebar.js"></script>` at the end of `<body>
+- `sidebar.css` also defines `.glow-text`, the gradient-glow heading style, which pages can use for their own headings
 
 ### Fonts (`font.css`)
-Futura Now Headline in `font/` (Thin 100 → ExtraBlack 950, each with an italic). Add `<link rel="stylesheet" href="/font.css">` to a page's `<head>`, then use `font-family: 'FuturaNowHeadline'` with the `font-weight` / `font-style` you want.
+Add `<link rel="stylesheet" href="/font.css">` to a page's `<head>`, then use `font-family: 'FuturaNowHeadline'` with the `font-weight` / `font-style` you want

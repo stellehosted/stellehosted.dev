@@ -22,7 +22,7 @@ svg .fx {
 /* HTML: the .fx is inside its hitbox. */
 .fx-hit:hover .fx {
   transform: scale(var(--fx-scale, 1.12));
-  filter: drop-shadow(0 0 0.417rem rgba(255,255,255,0.9));
+  filter: drop-shadow(0 0 0.75rem rgba(255,255,255,0.5));
 }
 /* SVG: the .fx (or a group containing it) is the hitbox's next sibling. These sibling selectors
    must stay scoped to svg: for HTML, `+ *` would match the NEXT hitbox in a row and light it up
