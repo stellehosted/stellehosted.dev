@@ -158,6 +158,88 @@
     transition: background 0.15s ease;
   }
   .more-btn:hover { background: rgba(255,255,255,0.2); }
+  /* Every card / stop opens the viewer. The art's own button covers it; the title is a button too. */
+  .art-open {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    padding: 0; border: 0; background: none; cursor: pointer;
+  }
+  .art-open:focus-visible { outline: 0.208rem solid #fff; outline-offset: -0.208rem; }
+  .title-open {
+    font: inherit; color: inherit; text-align: left;
+    padding: 0; border: 0; background: none; cursor: pointer;
+    transition: opacity 0.15s ease;
+  }
+  .title-open:hover { opacity: 0.7; }
+  .title-open:focus-visible { outline: 0.208rem solid #fff; outline-offset: 0.208rem; }
+  /* "3 images" pill on art that opens into a carousel */
+  .multi-badge {
+    position: absolute; top: 0.833rem; right: 0.833rem;
+    padding: 0.208rem 0.625rem; border-radius: 1rem;
+    font-size: 0.833rem; font-weight: 700; line-height: 1.4;
+    background: rgba(0,0,0,0.55);
+    pointer-events: none;
+  }
+
+  /* ===== viewer: a modal <dialog> (Esc, focus trap and the inert page behind it come for free) =====
+     Image / carousel on the left, title + date + description on the right. */
+  .viewer {
+    padding: 0; border: 0;
+    max-width: none; max-height: none;
+    font-family: inherit; color: #fff;
+  }
+  .viewer[open] {
+    display: grid; grid-template-columns: minmax(0, 1fr) 22.917rem; grid-template-rows: minmax(0, 1fr);
+    width: 72rem; height: 46rem;
+    margin: auto;
+    overflow: hidden;
+    border-radius: 0.625rem;
+    background: rgba(14,14,22,0.8);
+    backdrop-filter: blur(1.667rem); -webkit-backdrop-filter: blur(1.667rem);
+    box-shadow: 0 0 3.333rem rgba(0,0,0,0.6);
+  }
+  .viewer::backdrop { background: rgba(0,0,0,0.55); backdrop-filter: blur(0.625rem); -webkit-backdrop-filter: blur(0.625rem); }
+  .viewer-stage {
+    position: relative; min-width: 0;
+    background: rgba(0,0,0,0.3);
+    touch-action: pan-y;
+  }
+  .viewer-stage img { position: absolute; inset: 0; display: block; width: 100%; height: 100%; object-fit: contain; transition: opacity 0.2s ease; }
+  .viewer-stage img:not(.ready) { opacity: 0; }   /* no broken-image alt text while a big file loads */
+  .viewer button { font: inherit; color: #fff; cursor: pointer; border: 0; }
+  .viewer button:focus-visible { outline: 0.208rem solid #fff; outline-offset: 0.104rem; }
+  .v-nav, .v-close {
+    position: absolute;
+    display: grid; place-items: center;
+    width: 2.5rem; height: 2.5rem; padding: 0; border-radius: 50%;
+    background: rgba(0,0,0,0.45);
+    transition: background 0.15s ease;
+  }
+  .v-nav:hover, .v-close:hover { background: rgba(0,0,0,0.7); }
+  .v-nav svg, .v-close svg { width: 1.25rem; height: 1.25rem; fill: none; stroke: #fff; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+  .v-nav { top: calc(50% - 1.25rem); }
+  .v-prev { left: 0.833rem; }
+  .v-next { right: 0.833rem; }
+  .v-close { top: 0.833rem; right: 0.833rem; z-index: 1; }
+  .v-dots {
+    position: absolute; left: 0; right: 0; bottom: 0.833rem;
+    width: fit-content; margin: 0 auto;
+    display: flex; gap: 0.521rem;
+    padding: 0.417rem 0.625rem; border-radius: 1rem;
+    background: rgba(0,0,0,0.45);   /* readable on any art */
+  }
+  .v-dots button { width: 0.625rem; height: 0.625rem; padding: 0; border-radius: 50%; background: rgba(255,255,255,0.4); }
+  .v-dots button[aria-current="true"] { background: #fff; }
+  .viewer.single .v-nav, .viewer.single .v-dots { display: none; }
+  .viewer-info {
+    display: flex; flex-direction: column; gap: 0.625rem;
+    padding: 3.333rem 2.083rem 2.083rem;
+    overflow-y: auto;
+  }
+  .viewer-title { font-size: 2.0833rem; }
+  .viewer-date { font-size: 1.0417rem; opacity: 0.8; }
+  .viewer-desc { margin-top: 1.042rem; font-size: 1.0417rem; line-height: 1.6; }
+  .viewer-desc p + p { margin-top: 1.042rem; }
+  .viewer-desc p { white-space: pre-line; }
   .empty { margin-top: 1.042rem; font-size: 1.0417rem; opacity: 0.6; }
 </style>
 </head>
@@ -189,6 +271,21 @@
   </div>
 </nav>
 
+<dialog class="viewer" id="viewer" aria-labelledby="viewer-title">
+  <div class="viewer-stage" id="viewer-stage">
+    <img id="viewer-img" alt="">
+    <button type="button" class="v-nav v-prev" id="viewer-prev" aria-label="Previous image"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
+    <button type="button" class="v-nav v-next" id="viewer-next" aria-label="Next image"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button>
+    <div class="v-dots" id="viewer-dots"></div>
+  </div>
+  <div class="viewer-info">
+    <h2 class="glow-text viewer-title" id="viewer-title"></h2>
+    <time class="viewer-date" id="viewer-date"></time>
+    <div class="viewer-desc" id="viewer-desc"></div>
+  </div>
+  <button type="button" class="v-close" id="viewer-close" aria-label="Close" autofocus><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+</dialog>
+
 <script>
   // Content comes from the server's /api/art, which lists whatever is in content/art (see README
   // "Adding content"). Everything is built with textContent / DOM nodes, never innerHTML.
@@ -206,6 +303,79 @@
   };
   const empty = (parent) => parent.appendChild(el('p', 'empty', 'Nothing here yet.'));
 
+  // The invisible button over a card / stop's art that opens the viewer, plus a "3 images" pill
+  // when the entry is a carousel. Returns nodes for the caller to append to the art.
+  function openers(entry) {
+    const button = el('button', 'art-open');
+    button.type = 'button';
+    button.setAttribute('aria-label', `View ${entry.title}`);
+    button.addEventListener('click', () => openViewer(entry));
+    const nodes = [button];
+    if (entry.images.length > 1) nodes.unshift(el('span', 'multi-badge', `${entry.images.length} images`));
+    return nodes;
+  }
+
+  // ---- viewer: a modal <dialog> with a carousel and the description ----
+  const viewer = document.getElementById('viewer');
+  const viewerImg = document.getElementById('viewer-img');
+  const viewerDots = document.getElementById('viewer-dots');
+  let shown = null;   // the entry being viewed
+  let slide = 0;
+
+  function showSlide(i) {
+    const images = shown.images;
+    slide = (i + images.length) % images.length;
+    viewerImg.classList.remove('ready');
+    viewerImg.src = images[slide].src;
+    viewerImg.alt = images.length > 1 ? `${shown.title}, image ${slide + 1} of ${images.length}` : shown.title;
+    [...viewerDots.children].forEach((dot, n) => dot.setAttribute('aria-current', n === slide));
+    if (images.length > 1) new Image().src = images[(slide + 1) % images.length].src;   // warm up the next one
+  }
+
+  function openViewer(entry) {
+    shown = entry;
+    viewer.classList.toggle('single', entry.images.length === 1);
+    viewerDots.replaceChildren(...entry.images.map((_, n) => {
+      const dot = el('button');
+      dot.type = 'button';
+      dot.setAttribute('aria-label', `Image ${n + 1}`);
+      dot.addEventListener('click', () => showSlide(n));
+      return dot;
+    }));
+    document.getElementById('viewer-title').textContent = entry.title;
+    const date = document.getElementById('viewer-date');
+    date.textContent = entry.date ? shortDate(entry.date) : '';
+    date.hidden = !entry.date;
+    if (entry.date) date.dateTime = entry.date;
+    // Blank lines separate paragraphs; single line breaks are kept (white-space: pre-line).
+    document.getElementById('viewer-desc').replaceChildren(
+      ...(entry.description ? entry.description.split(/\n\s*\n/).map((p) => el('p', '', p.trim())) : []));
+    showSlide(0);
+    viewer.showModal();
+  }
+
+  viewerImg.addEventListener('load', () => viewerImg.classList.add('ready'));
+  document.getElementById('viewer-prev').addEventListener('click', () => showSlide(slide - 1));
+  document.getElementById('viewer-next').addEventListener('click', () => showSlide(slide + 1));
+  document.getElementById('viewer-close').addEventListener('click', () => viewer.close());
+  viewer.addEventListener('click', (e) => { if (e.target === viewer) viewer.close(); });   // the dim area around the panel
+  viewer.addEventListener('close', () => viewerImg.removeAttribute('src'));
+  viewer.addEventListener('keydown', (e) => {
+    if (shown.images.length < 2) return;
+    if (e.key === 'ArrowLeft') showSlide(slide - 1);
+    if (e.key === 'ArrowRight') showSlide(slide + 1);
+  });
+  // Swipe left / right on touch screens.
+  let swipeX = null;
+  const stage = document.getElementById('viewer-stage');
+  stage.addEventListener('pointerdown', (e) => { if (e.pointerType === 'touch') swipeX = e.clientX; });
+  stage.addEventListener('pointerup', (e) => {
+    if (swipeX === null || shown.images.length < 2) return;
+    const dx = e.clientX - swipeX;
+    swipeX = null;
+    if (Math.abs(dx) > 50) showSlide(slide + (dx < 0 ? 1 : -1));
+  });
+
   function renderOcs(ocs) {
     const list = document.getElementById('ocs-list');
     if (!ocs.length) return empty(list);
@@ -215,7 +385,8 @@
         card.style.setProperty('--from', oc.from);
         card.style.setProperty('--to', oc.to);
       }
-      card.append(img(oc.image, oc.name), el('div', 'card-band'), el('div', 'card-name', oc.name));
+      card.append(img(oc.images[0].src, oc.name), el('div', 'card-band'), el('div', 'card-name', oc.name));
+      card.append(...openers({ title: oc.name, description: oc.description, images: oc.images }));
       list.appendChild(card);
     }
   }
@@ -229,15 +400,21 @@
   function renderStop(piece, id) {
     const stop = el('article', 'stop');
     if (id) stop.id = id;
+    const cover = piece.images[0];
     const art = el('div', 'stop-art');
-    if (piece.width && piece.height) art.style.aspectRatio = `${piece.width} / ${piece.height}`;
-    art.appendChild(img(piece.image, piece.title));
+    if (cover.width && cover.height) art.style.aspectRatio = `${cover.width} / ${cover.height}`;
+    art.append(img(cover.src, piece.title), ...openers(piece));
     const dot = el('div', 'tl');
     dot.appendChild(el('span', 'tl-dot'));
     const date = el('time', 'stop-date', shortDate(piece.date));
     date.dateTime = piece.date;
     const text = el('div', 'stop-text');
-    text.append(el('h3', 'stop-title', piece.title), date);
+    const title = el('h3', 'stop-title');
+    const titleButton = el('button', 'title-open', piece.title);
+    titleButton.type = 'button';
+    titleButton.addEventListener('click', () => openViewer(piece));
+    title.appendChild(titleButton);
+    text.append(title, date);
     stop.append(art, dot, text);
     return stop;
   }

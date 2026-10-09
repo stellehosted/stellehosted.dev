@@ -127,6 +127,8 @@ const MIME = {
 //   content/art/ocs/<Name>.png            one OC card each. A leading "01 " sets the order.
 //   content/art/ocs/colors.json           card gradients (none if missing): { "Stelle": ["#b39ef2", "#6248b3"] }
 //   content/art/<YYYY-MM-DD Title>.png    one timeline stop each. No date in the name = file's modified date.
+// Either kind of entry can instead be a folder of images (a carousel), named the same way, and can
+// have a description: "<same name>.txt" beside a single image, or description.txt inside a folder.
 const IMAGE_EXT = new Set(['.png', '.jpg', '.jpeg', '.webp', '.avif', '.gif', '.heic', '.heif']);
 // Browsers (other than Safari) can't show HEIC, so those files are converted to JPEG when served.
 const NEEDS_CONVERSION = new Set(['.heic', '.heif']);
@@ -236,29 +238,67 @@ async function imageSize(file) {
   return size;
 }
 
-async function scanArt() {
-  const artDir = path.join(CONTENT_DIR, 'art');
-  const ocsDir = path.join(artDir, 'ocs');
+// An "entry" is one piece of art: either a single image file, or a folder of images (a carousel).
+// Its description is plain text in "<same name>.txt" beside a single image, or "description.txt"
+// inside a folder. Returns { base, mtime, description, images: [{ src, width, height }] } for each.
+async function scanEntries(dirParts, skipDirs = []) {
+  const dir = path.join(CONTENT_DIR, ...dirParts);
+  let dirents;
+  try {
+    dirents = await fs.promises.readdir(dir, { withFileTypes: true });
+  } catch {
+    return [];   // folder doesn't exist yet
+  }
+  const readText = (file) => fs.promises.readFile(file, 'utf8').then((t) => t.trim(), () => '');
 
-  const colors = await readJson(path.join(ocsDir, 'colors.json'));
+  const found = dirents
+    .filter((e) => !e.name.startsWith('.'))
+    .sort((a, b) => byName(a.name, b.name))
+    .map(async (e) => {
+      const isImage = e.isFile() && IMAGE_EXT.has(path.extname(e.name).toLowerCase());
+      const isFolder = e.isDirectory() && !skipDirs.includes(e.name);
+      if (!isImage && !isFolder) return null;
+
+      const parts = isFolder ? [...dirParts, e.name] : dirParts;
+      const files = isFolder ? await listImages(path.join(dir, e.name)) : [e.name];
+      if (!files.length) return null;
+
+      const base = isFolder ? e.name : path.parse(e.name).name;
+      const descFile = isFolder ? path.join(dir, e.name, 'description.txt') : path.join(dir, `${base}.txt`);
+      const [mtime, description, images] = await Promise.all([
+        fs.promises.stat(path.join(dir, e.name)).then((st) => st.mtime),
+        readText(descFile),
+        Promise.all(files.map(async (file) => {
+          const size = await imageSize(path.join(CONTENT_DIR, ...parts, file));
+          return { src: contentUrl(...parts, file), width: size?.width ?? null, height: size?.height ?? null };
+        })),
+      ]);
+      return { base, mtime, description, images };
+    });
+  return (await Promise.all(found)).filter(Boolean);
+}
+
+async function scanArt() {
+  const colors = await readJson(path.join(CONTENT_DIR, 'art', 'ocs', 'colors.json'));
   const colorFor = (name) => {
     const key = Object.keys(colors).find((k) => k.toLowerCase() === name.toLowerCase());
     return key && Array.isArray(colors[key]) ? colors[key] : null;
   };
-  const ocs = (await listImages(ocsDir)).map((file) => {
-    const name = path.parse(file).name.replace(/^\d+[\s._-]+/, '');
+  const ocs = (await scanEntries(['art', 'ocs'])).map(({ base, description, images }) => {
+    const name = base.replace(/^\d+[\s._-]+/, '');
     const [from, to] = colorFor(name) || [null, null];   // no entry in colors.json = no gradient
-    return { name, image: contentUrl('art', 'ocs', file), from, to };
+    return { name, from, to, description, images };
   });
 
-  const pieces = await Promise.all((await listImages(artDir)).map(async (file) => {
-    const base = path.parse(file).name;
+  const pieces = (await scanEntries(['art'], ['ocs'])).map(({ base, mtime, description, images }) => {
     const m = base.match(/^(\d{4}-\d{2}-\d{2})(?:[\s_-]+(.*))?$/);
-    const date = m ? m[1] : (await fs.promises.stat(path.join(artDir, file))).mtime.toISOString().slice(0, 10);
-    const title = (m ? m[2] : base) || 'Untitled';
-    const size = await imageSize(path.join(artDir, file));
-    return { title, date, image: contentUrl('art', file), width: size?.width ?? null, height: size?.height ?? null };
-  }));
+    return {
+      title: (m ? m[2] : base) || 'Untitled',
+      date: m ? m[1] : mtime.toISOString().slice(0, 10),
+      description,
+      images,
+    };
+  });
   pieces.sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : byName(a.title, b.title)));
 
   return { ocs, pieces };
