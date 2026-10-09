@@ -125,13 +125,12 @@ const MIME = {
 // ---- Art content -----------------------------------------------------------------------------
 // No database and no metadata files: the folder *is* the content. Drop files in and they show up.
 //   content/art/ocs/<Name>.png            one OC card each. A leading "01 " sets the order.
-//   content/art/ocs/colors.json           optional card gradients: { "Stelle": ["#b39ef2", "#6248b3"] }
+//   content/art/ocs/colors.json           card gradients (none if missing): { "Stelle": ["#b39ef2", "#6248b3"] }
 //   content/art/<YYYY-MM-DD Title>.png    one timeline stop each. No date in the name = file's modified date.
 const IMAGE_EXT = new Set(['.png', '.jpg', '.jpeg', '.webp', '.avif', '.gif', '.heic', '.heif']);
 // Browsers (other than Safari) can't show HEIC, so those files are converted to JPEG when served.
 const NEEDS_CONVERSION = new Set(['.heic', '.heif']);
 const byName = new Intl.Collator(undefined, { numeric: true }).compare;
-const DEFAULT_OC_COLORS = [['#b39ef2', '#6248b3'], ['#889bea', '#8616b3'], ['#9dd4ff', '#24107e']];
 
 const contentUrl = (...parts) => '/content/' + parts.map(encodeURIComponent).join('/');
 
@@ -246,9 +245,9 @@ async function scanArt() {
     const key = Object.keys(colors).find((k) => k.toLowerCase() === name.toLowerCase());
     return key && Array.isArray(colors[key]) ? colors[key] : null;
   };
-  const ocs = (await listImages(ocsDir)).map((file, i) => {
+  const ocs = (await listImages(ocsDir)).map((file) => {
     const name = path.parse(file).name.replace(/^\d+[\s._-]+/, '');
-    const [from, to] = colorFor(name) || DEFAULT_OC_COLORS[i % DEFAULT_OC_COLORS.length];
+    const [from, to] = colorFor(name) || [null, null];   // no entry in colors.json = no gradient
     return { name, image: contentUrl('art', 'ocs', file), from, to };
   });
 
