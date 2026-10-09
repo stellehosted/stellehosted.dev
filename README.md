@@ -29,7 +29,7 @@ content/art/
   2026-05-07 Everything I Learned and Loved.png    one timeline stop per image: "date title"
   2025-03-14 Untitled.jpg                          no date in the name = the file's modified date
 ```
-Newest stops come first, and the sidebar's year links are built from them. `png`, `jpg`, `webp`, `avif` and `gif` all work. Files starting with `.` (macOS/Samba junk) are ignored. The server lists the folder on each request via `/api/art`, and serves the files from `/content/...`.
+Newest stops come first, and the sidebar's year links are built from them. `png`, `jpg`, `webp`, `avif`, `gif` and `heic` all work (HEIC is converted to JPEG by the server on first view). Files starting with `.` (macOS/Samba junk) are ignored. The server lists the folder on each request via `/api/art`, and serves the files from `/content/...`.
 
 ---
 # Shared components

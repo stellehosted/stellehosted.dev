@@ -9,6 +9,9 @@ const http = require('http');
 const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
+const os = require('os');
+const { execFile } = require('child_process');
+const { promisify } = require('util');
 
 const PORT = process.env.PORT || 8080;
 const NAVIDROME_URL = (process.env.NAVIDROME_URL || 'http://127.0.0.1:4533').replace(/\/$/, '');
@@ -124,7 +127,9 @@ const MIME = {
 //   content/art/ocs/<Name>.png            one OC card each. A leading "01 " sets the order.
 //   content/art/ocs/colors.json           optional card gradients: { "Stelle": ["#b39ef2", "#6248b3"] }
 //   content/art/<YYYY-MM-DD Title>.png    one timeline stop each. No date in the name = file's modified date.
-const IMAGE_EXT = new Set(['.png', '.jpg', '.jpeg', '.webp', '.avif', '.gif']);
+const IMAGE_EXT = new Set(['.png', '.jpg', '.jpeg', '.webp', '.avif', '.gif', '.heic', '.heif']);
+// Browsers (other than Safari) can't show HEIC, so those files are converted to JPEG when served.
+const NEEDS_CONVERSION = new Set(['.heic', '.heif']);
 const byName = new Intl.Collator(undefined, { numeric: true }).compare;
 const DEFAULT_OC_COLORS = [['#b39ef2', '#6248b3'], ['#889bea', '#8616b3'], ['#9dd4ff', '#24107e']];
 
@@ -178,6 +183,46 @@ async function scanArt() {
   return { ocs, pieces };
 }
 
+// ---- HEIC -> JPEG ----------------------------------------------------------------------------
+// iPhone photos are HEIC. Node can't decode them, so shell out: `heif-convert` (Alpine package
+// libheif-tools, installed in server/Dockerfile) or, when developing on a Mac, the built-in `sips`.
+// Results are cached by source path + mtime + size, so each file is converted once, and
+// concurrent requests for the same file share one conversion.
+const run = promisify(execFile);
+const HEIC_CACHE_DIR = path.join(os.tmpdir(), 'stellehosted-heic');
+const conversions = new Map();
+
+async function convertHeic(src, dest) {
+  const work = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'heic-'));
+  try {
+    const out = path.join(work, 'out.jpg');
+    try {
+      await run('heif-convert', ['-q', '88', src, out]);
+    } catch (err) {
+      if (err.code !== 'ENOENT') throw err;
+      await run('sips', ['-s', 'format', 'jpeg', '-s', 'formatOptions', '88', src, '--out', out]);
+    }
+    // heif-convert writes out-1.jpg, out-2.jpg... for files holding several images (bursts, Live Photos).
+    const made = (await fs.promises.readdir(work)).filter((f) => f.endsWith('.jpg')).sort(byName)[0];
+    await fs.promises.mkdir(HEIC_CACHE_DIR, { recursive: true });
+    await fs.promises.rename(path.join(work, made), dest);
+  } finally {
+    fs.promises.rm(work, { recursive: true, force: true }).catch(() => {});
+  }
+}
+
+// Path of the cached JPEG for a HEIC file, converting first if needed.
+async function jpegFor(filePath, stat) {
+  const key = crypto.createHash('sha1').update(`${filePath}|${stat.mtimeMs}|${stat.size}`).digest('hex');
+  const dest = path.join(HEIC_CACHE_DIR, `${key}.jpg`);
+  if (fs.existsSync(dest)) return dest;
+  if (!conversions.has(dest)) {
+    conversions.set(dest, convertHeic(filePath, dest).finally(() => conversions.delete(dest)));
+  }
+  await conversions.get(dest);
+  return dest;
+}
+
 // Serves uploaded files. Unlike the site's own files these are big, so revalidate with
 // Last-Modified (304 when unchanged) instead of re-sending the image on every visit.
 function serveContent(req, res, urlPath) {
@@ -193,24 +238,36 @@ function serveContent(req, res, urlPath) {
     res.writeHead(403).end();
     return;
   }
-  fs.stat(filePath, (err, stat) => {
+  fs.stat(filePath, async (err, stat) => {
     if (err || !stat.isFile()) {
       res.writeHead(404).end('Not found');
       return;
     }
-    const lastModified = stat.mtime.toUTCString();
+    const ext = path.extname(filePath).toLowerCase();
     const headers = {
-      'Content-Type': MIME[path.extname(filePath).toLowerCase()] || 'application/octet-stream',
+      'Content-Type': NEEDS_CONVERSION.has(ext) ? 'image/jpeg' : MIME[ext] || 'application/octet-stream',
       'Cache-Control': 'no-cache',
-      'Last-Modified': lastModified,
+      'Last-Modified': stat.mtime.toUTCString(),
     };
     const since = Date.parse(req.headers['if-modified-since']);
     if (since && Math.floor(stat.mtimeMs / 1000) * 1000 <= since) {
       res.writeHead(304, headers).end();
       return;
     }
-    res.writeHead(200, { ...headers, 'Content-Length': stat.size });
-    fs.createReadStream(filePath).on('error', () => res.destroy()).pipe(res);
+    let sendPath = filePath;
+    let size = stat.size;
+    if (NEEDS_CONVERSION.has(ext)) {
+      try {
+        sendPath = await jpegFor(filePath, stat);
+        size = (await fs.promises.stat(sendPath)).size;
+      } catch (e) {
+        console.error('[content] HEIC conversion failed for', rel, '-', e.message);
+        res.writeHead(415).end('Could not convert HEIC');
+        return;
+      }
+    }
+    res.writeHead(200, { ...headers, 'Content-Length': size });
+    fs.createReadStream(sendPath).on('error', () => res.destroy()).pipe(res);
   });
 }
 
