@@ -40,33 +40,35 @@
      the page. They rely on being later in the DOM to paint over the scroller. */
 
   /* ===== scrolling content ===== */
-  /* Starts at the top of the letterboxed canvas so nothing scrolls into the top bar, but runs to the
-     bottom of the window so content also passes under the dock's blur on tall screens. Full width
-     so the wheel works anywhere across it. */
+  /* Covers the whole window, so content scrolls all the way up to the top edge and down under the
+     dock's blur on tall screens (not just within the 16:9 canvas). Full width so the wheel works
+     anywhere. --canvas-top is where the canvas starts: the letterbox bar above it when the window
+     is taller than 16:9, otherwise 0. */
   .scroller {
-    position: fixed; left: 0; right: 0; bottom: 0;
-    top: calc(50vh - 28.125rem);
+    --canvas-top: calc(50vh - 28.125rem);
+    position: fixed; inset: 0;
     overflow-y: auto; overflow-x: hidden;
     scrollbar-width: none;
   }
   .scroller::-webkit-scrollbar { display: none; }
   @media (prefers-reduced-motion: no-preference) { .scroller { scroll-behavior: smooth; } }
 
-  /* Content column: x=600, 1220 wide, first heading at y=100. Bottom padding lets the last stop
-     scroll clear of the dock. */
+  /* Content column: x=600, 1220 wide, first heading at y=100 *of the canvas* (hence the top padding
+     includes the letterbox bar). Bottom padding lets the last stop scroll clear of the dock. */
   .content {
     width: 63.542rem;
     margin-left: calc(50% - 50rem + 31.25rem);
-    padding: 5.208rem 0 12rem;
+    padding: calc(var(--canvas-top) + 5.208rem) 0 12rem;
   }
-  .content section { scroll-margin-top: 5.208rem; }
+  .content section { scroll-margin-top: calc(var(--canvas-top) + 5.208rem); }
   .content h2 { font-size: 2.0833rem; }   /* class="glow-text" comes from sidebar.css */
 
-  /* OC's: three 385x500 cards, gap 32 */
-  .ocs { display: flex; gap: 1.667rem; margin-top: 1.042rem; }
+  /* OC's: 385x500 cards, gap 32. The shape is fixed, so one card (or four) never stretches or
+     squashes; three fill the row and more wrap onto the next. */
+  .ocs { display: flex; flex-wrap: wrap; gap: 1.667rem; margin-top: 1.042rem; }
   .card {
-    position: relative; flex: 1 1 0;
-    height: 26.042rem;
+    position: relative; flex: 0 0 20.069rem;
+    aspect-ratio: 385 / 500;
     border-radius: 0.417rem;
     overflow: hidden;
     background: linear-gradient(to bottom right, var(--from), var(--to));
@@ -99,14 +101,17 @@
   .stop {
     display: grid;
     grid-template-columns: 19.531rem 3.333rem 1.667rem 1.667rem 1fr;   /* art | 64 gap | timeline | 32 gap | text */
-    scroll-margin-top: 5.208rem;
+    scroll-margin-top: calc(var(--canvas-top) + 5.208rem);
   }
   /* The 64px between stops is margin on the art, not padding on the row, so it's *inside* the row
      and the timeline column (which stretches to the row's height) spans it. */
   .stop:not(:last-child) .stop-art { margin-bottom: 3.333rem; }
+  /* Fixed 375px wide; the height follows the art's own aspect ratio (set inline from the file's
+     size, so the box is the right shape before a lazy image has loaded). */
   .stop-art {
     position: relative;
-    height: 26.042rem;
+    align-self: start;
+    aspect-ratio: 375 / 500;
     border-radius: 0.417rem;
     overflow: hidden;
     box-shadow: 0 0 1.667rem rgba(0,0,0,0.5);
@@ -136,7 +141,23 @@
   /* Text block: title's vertical center lines up with the ring's center (58px + half a 44px line) */
   .stop-text { grid-column: 5; padding-top: 3.021rem; }
   .stop-title { font-size: 2.0833rem; font-weight: 700; line-height: 1.1; }
-  .stop-date { font-size: 1.0417rem; line-height: 1.6; }
+  .stop-date { display: block; font-size: 1.0417rem; line-height: 1.6; }
+  /* "Load more" row: a stop without art, so the timeline line keeps running through it. It ends at
+     the button's middle when it's the last row on the page. */
+  .stop-more .tl::before { top: 0; bottom: 0; height: auto; }
+  .stop-more .tl::after { display: none; }
+  .stop-more:last-child .tl::before { bottom: 50%; }
+  .stop-more:not(:last-child) .more-btn { margin-bottom: 3.333rem; }
+  .more-btn {
+    grid-column: 5; justify-self: start; align-self: center;
+    font: inherit; font-size: 1.0417rem; font-weight: 700; color: #fff;
+    background: rgba(255,255,255,0.1);
+    border: 0; border-radius: 0.417rem;
+    padding: 0.729rem 1.667rem;
+    cursor: pointer;
+    transition: background 0.15s ease;
+  }
+  .more-btn:hover { background: rgba(255,255,255,0.2); }
   .empty { margin-top: 1.042rem; font-size: 1.0417rem; opacity: 0.6; }
 </style>
 </head>
@@ -197,30 +218,82 @@
     }
   }
 
-  // Pieces arrive newest first. The first stop of each year gets id="y<year>" for the sidebar link.
+  // "2026-05-07" -> "5/7/26"
+  const shortDate = (iso) => {
+    const [y, m, d] = iso.split('-');
+    return `${+m}/${+d}/${y.slice(2)}`;
+  };
+
+  function renderStop(piece, id) {
+    const stop = el('article', 'stop');
+    if (id) stop.id = id;
+    const art = el('div', 'stop-art');
+    if (piece.width && piece.height) art.style.aspectRatio = `${piece.width} / ${piece.height}`;
+    art.appendChild(img(piece.image, piece.title));
+    const dot = el('div', 'tl');
+    dot.appendChild(el('span', 'tl-dot'));
+    const date = el('time', 'stop-date', shortDate(piece.date));
+    date.dateTime = piece.date;
+    const text = el('div', 'stop-text');
+    text.append(el('h3', 'stop-title', piece.title), date);
+    stop.append(art, dot, text);
+    return stop;
+  }
+
+  // Each year starts with PAGE_SIZE stops and a "Load more" button for the rest; images load lazily as
+  // they scroll near the screen. Pieces arrive newest first. The first stop of each year gets
+  // id="y<year>" for the sidebar link.
+  const PAGE_SIZE = 4;
+
+  function renderYear(year, items, stops) {
+    const end = document.createComment(year);   // everything for this year is inserted before this
+    stops.appendChild(end);
+    let shown = 0;
+    let moreRow = null;
+
+    const showMore = () => {
+      const firstNew = shown;
+      let firstStop = null;
+      for (const piece of items.slice(shown, shown + PAGE_SIZE)) {
+        const stop = renderStop(piece, shown === 0 ? 'y' + year : '');
+        firstStop ??= stop;
+        end.before(stop);
+        shown++;
+      }
+      moreRow?.remove();
+      moreRow = null;
+      if (shown < items.length) {
+        const button = el('button', 'more-btn', 'Load more');
+        button.type = 'button';
+        button.addEventListener('click', showMore);
+        const dot = el('div', 'tl');
+        moreRow = el('div', 'stop stop-more');
+        moreRow.append(dot, button);
+        end.before(moreRow);
+        if (firstNew > 0) button.focus({ preventScroll: true });
+      } else if (firstNew > 0) {
+        firstStop.tabIndex = -1;   // the button is gone: hand focus to the first stop that appeared
+        firstStop.focus({ preventScroll: true });
+      }
+    };
+    showMore();
+  }
+
   function renderStops(pieces) {
     const stops = document.getElementById('stops');
     const years = document.getElementById('years');
     if (!pieces.length) return empty(stops);
-    const seen = new Set();
+    const byYear = new Map();
     for (const piece of pieces) {
-      const stop = el('article', 'stop');
       const year = piece.date.slice(0, 4);
-      if (!seen.has(year)) {
-        seen.add(year);
-        stop.id = 'y' + year;
-        const link = el('a', '', year);
-        link.href = '#y' + year;
-        years.appendChild(el('li')).appendChild(link);
-      }
-      const art = el('div', 'stop-art');
-      art.appendChild(img(piece.image, piece.title));
-      const dot = el('div', 'tl');
-      dot.appendChild(el('span', 'tl-dot'));
-      const text = el('div', 'stop-text');
-      text.append(el('h3', 'stop-title', piece.title), el('p', 'stop-date', piece.date));
-      stop.append(art, dot, text);
-      stops.appendChild(stop);
+      if (!byYear.has(year)) byYear.set(year, []);
+      byYear.get(year).push(piece);
+    }
+    for (const [year, items] of byYear) {
+      const link = el('a', '', year);
+      link.href = '#y' + year;
+      years.appendChild(el('li')).appendChild(link);
+      renderYear(year, items, stops);
     }
   }
 
