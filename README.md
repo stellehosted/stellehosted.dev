@@ -3,7 +3,9 @@ My personal website, and a perpetual work in progress...
 
 ---
 # Deployment
-- `stellehosted.dev` & `navidrome` → Docker network (stellehosted.dev)
+1. Make `.env` & `docker-compose.yml` from their example files
+2. Put `stellehosted.dev` & `navidrome` into the same Docker network (stellehosted.dev)
+3. `docker compose up -d --build`
 
 ---
 # Pages
@@ -17,15 +19,15 @@ My art portfolio over the years!
 
 ---
 # Adding Content
-Drop everything in `content/` (Docker: `./content` -> `/app/content`)
+All contents are in `content/` (docker-compose: `./content` → `/app/content`)
 
 ### Art (`/art`)
 ```
 content/art/
   ocs/
-    01 Stelle.png         one card per image; the name is the filename, a leading number sets the order
-    02 Ace.png
-    colors.json           optional gradients behind transparent art: {"Stelle": ["#b39ef2", "#6248b3"]}
+    01 OC1.png     one card per image; the name is the filename, a leading number sets the order
+    02 OC2.png
+    colors.json    optional gradients behind transparent art: {"Stelle": ["#b39ef2", "#6248b3"]}
   2026-05-07 Everything I Learned and Loved.png    one timeline stop per image: "date title"
   2025-03-14 Untitled.jpg                          no date in the name = the file's modified date
 ```
