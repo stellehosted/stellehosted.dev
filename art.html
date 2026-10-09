@@ -42,10 +42,8 @@
   /* ===== scrolling content ===== */
   /* Covers the whole window, so content scrolls all the way up to the top edge and down under the
      dock's blur on tall screens (not just within the 16:9 canvas). Full width so the wheel works
-     anywhere. --canvas-top is where the canvas starts: the letterbox bar above it when the window
-     is taller than 16:9, otherwise 0. */
+     anywhere. */
   .scroller {
-    --canvas-top: calc(50vh - 28.125rem);
     position: fixed; inset: 0;
     overflow-y: auto; overflow-x: hidden;
     scrollbar-width: none;
@@ -53,21 +51,23 @@
   .scroller::-webkit-scrollbar { display: none; }
   @media (prefers-reduced-motion: no-preference) { .scroller { scroll-behavior: smooth; } }
 
-  /* Content column: x=600, 1220 wide, first heading at y=100 *of the canvas* (hence the top padding
-     includes the letterbox bar). Bottom padding lets the last stop scroll clear of the dock. */
+  /* Content column: x=600, 1220 wide, first heading 100px (5.208rem) below the top of the *window*, so
+     on a tall window it doesn't sink into the letterbox bar the way the centered sidebar does.
+     Bottom padding lets the last stop scroll clear of the dock. */
   .content {
     width: 63.542rem;
     margin-left: calc(50% - 50rem + 31.25rem);
-    padding: calc(var(--canvas-top) + 5.208rem) 0 12rem;
+    padding: 5.208rem 0 12rem;
   }
-  .content section { scroll-margin-top: calc(var(--canvas-top) + 5.208rem); }
+  .content section { scroll-margin-top: 5.208rem; }
   .content h2 { font-size: 2.0833rem; }   /* class="glow-text" comes from sidebar.css */
 
   /* OC's: 385x500 cards, gap 32. The shape is fixed, so one card (or four) never stretches or
      squashes; three fill the row and more wrap onto the next. */
   .ocs { display: flex; flex-wrap: wrap; gap: 1.667rem; margin-top: 1.042rem; }
+  .card-hit { flex: 0 0 20.069rem; }
   .card {
-    position: relative; flex: 0 0 20.069rem;
+    position: relative; display: block; width: 100%;
     aspect-ratio: 385 / 500;
     border-radius: 0.417rem;
     overflow: hidden;
@@ -101,16 +101,16 @@
   .stop {
     display: grid;
     grid-template-columns: 19.531rem 3.333rem 1.667rem 1.667rem 1fr;   /* art | 64 gap | timeline | 32 gap | text */
-    scroll-margin-top: calc(var(--canvas-top) + 5.208rem);
+    scroll-margin-top: 5.208rem;
   }
   /* The 64px between stops is margin on the art, not padding on the row, so it's *inside* the row
      and the timeline column (which stretches to the row's height) spans it. */
-  .stop:not(:last-child) .stop-art { margin-bottom: 3.333rem; }
+  .stop:not(:last-child) .art-hit { margin-bottom: 3.333rem; }
   /* Fixed 375px wide; the height follows the art's own aspect ratio (set inline from the file's
-     size, so the box is the right shape before a lazy image has loaded). */
+     size, so the box is the right shape before its image has loaded). */
+  .art-hit { position: relative; align-self: start; }
   .stop-art {
-    position: relative;
-    align-self: start;
+    position: relative; display: block;
     aspect-ratio: 375 / 500;
     border-radius: 0.417rem;
     overflow: hidden;
@@ -118,6 +118,8 @@
     background: linear-gradient(to bottom right, rgba(255,255,255,0.1), rgba(255,255,255,0.03));
   }
   .stop-art > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  /* Off-screen images have their src removed (see the observer in the script): no alt-text flash. */
+  img:not([src]) { visibility: hidden; }
 
   /* The "stop": a 32px ring with 5px lines above and below, ring centered 80px down the row.
      The ring is hollow, so the two lines are separate pieces that end at its edges. */
@@ -130,7 +132,8 @@
   }
   .tl::before { top: 0; height: 3.333rem; }
   .tl::after  { top: 5rem; bottom: 0; }
-  .stop:last-child .tl::after { display: none; }
+  /* The line ends at the ring at both ends of the whole timeline instead of trailing off. */
+  .stop:first-child .tl::before, .stop:last-child .tl::after { display: none; }
   .tl-dot {
     position: absolute; left: 0; top: 3.333rem;
     width: 1.667rem; height: 1.667rem;
@@ -142,22 +145,11 @@
   .stop-text { grid-column: 5; padding-top: 3.021rem; }
   .stop-title { font-size: 2.0833rem; font-weight: 700; line-height: 1.1; }
   .stop-date { display: block; font-size: 1.0417rem; line-height: 1.6; }
-  /* "Load more" row: a stop without art, so the timeline line keeps running through it. It ends at
-     the button's middle when it's the last row on the page. */
-  .stop-more .tl::before { top: 0; bottom: 0; height: auto; }
-  .stop-more .tl::after { display: none; }
-  .stop-more:last-child .tl::before { bottom: 50%; }
-  .stop-more:not(:last-child) .more-btn { margin-bottom: 3.333rem; }
-  .more-btn {
-    grid-column: 5; justify-self: start; align-self: center;
-    font: inherit; font-size: 1.0417rem; font-weight: 700; color: #fff;
-    background: rgba(255,255,255,0.1);
-    border: 0; border-radius: 0.417rem;
-    padding: 0.729rem 1.667rem;
-    cursor: pointer;
-    transition: background 0.15s ease;
-  }
-  .more-btn:hover { background: rgba(255,255,255,0.2); }
+  /* Hover glow (fx.css): .art-hit is the hitbox and stays put, the art inside it (.fx) scales and
+     glows. The button is a sibling of the art, not inside it, so it keeps its clicks (.fx is
+     pointer-transparent). A gentler scale than the default: the art is big, and the OC cards would
+     otherwise overlap their neighbors. */
+  .art-hit { --fx-scale: 1.04; }
   /* Every card / stop opens the viewer. The art's own button covers it; the title is a button too. */
   .art-open {
     position: absolute; inset: 0; width: 100%; height: 100%;
@@ -295,24 +287,37 @@
     if (text !== undefined) node.textContent = text;
     return node;
   };
+  // Art images load as they approach the screen and unload (src removed, so the browser can drop the
+  // decoded bitmap) once they're a screen away. Every box is sized up front (fixed aspect ratio), so
+  // none of this moves the layout. The observer watches the image's box, not the src-less <img>.
+  const scroller = document.querySelector('.scroller');
+  const lazy = new IntersectionObserver((entries) => {
+    for (const { target, isIntersecting } of entries) {
+      const image = target.querySelector(':scope > img');
+      if (isIntersecting) image.src = image.dataset.src;
+      else image.removeAttribute('src');
+    }
+  }, { root: scroller, rootMargin: '100% 0px' });
   const img = (src, alt) => {
     const node = el('img');
-    node.src = src; node.alt = alt;
-    node.loading = 'lazy'; node.decoding = 'async';
+    node.dataset.src = src; node.alt = alt;
+    node.decoding = 'async';
     return node;
   };
   const empty = (parent) => parent.appendChild(el('p', 'empty', 'Nothing here yet.'));
 
-  // The invisible button over a card / stop's art that opens the viewer, plus a "3 images" pill
-  // when the entry is a carousel. Returns nodes for the caller to append to the art.
-  function openers(entry) {
+  // Wraps a card / stop's art in its hover hitbox (see fx.css): the art gets a "3 images" pill when
+  // the entry is a carousel, and the invisible button over it opens the viewer. Returns the hitbox.
+  function hitbox(art, entry) {
+    art.classList.add('fx');
+    if (entry.images.length > 1) art.append(el('span', 'multi-badge', `${entry.images.length} images`));
     const button = el('button', 'art-open');
     button.type = 'button';
     button.setAttribute('aria-label', `View ${entry.title}`);
     button.addEventListener('click', () => openViewer(entry));
-    const nodes = [button];
-    if (entry.images.length > 1) nodes.unshift(el('span', 'multi-badge', `${entry.images.length} images`));
-    return nodes;
+    const wrap = el('div', 'art-hit fx-hit');
+    wrap.append(art, button);
+    return wrap;
   }
 
   // ---- viewer: a modal <dialog> with a carousel and the description ----
@@ -386,8 +391,10 @@
         card.style.setProperty('--to', oc.to);
       }
       card.append(img(oc.images[0].src, oc.name), el('div', 'card-band'), el('div', 'card-name', oc.name));
-      card.append(...openers({ title: oc.name, description: oc.description, images: oc.images }));
-      list.appendChild(card);
+      const hit = hitbox(card, { title: oc.name, description: oc.description, images: oc.images });
+      hit.classList.add('card-hit');
+      list.appendChild(hit);
+      lazy.observe(card);
     }
   }
 
@@ -403,7 +410,9 @@
     const cover = piece.images[0];
     const art = el('div', 'stop-art');
     if (cover.width && cover.height) art.style.aspectRatio = `${cover.width} / ${cover.height}`;
-    art.append(img(cover.src, piece.title), ...openers(piece));
+    art.append(img(cover.src, piece.title));
+    const hit = hitbox(art, piece);
+    lazy.observe(art);
     const dot = el('div', 'tl');
     dot.appendChild(el('span', 'tl-dot'));
     const date = el('time', 'stop-date', shortDate(piece.date));
@@ -415,47 +424,13 @@
     titleButton.addEventListener('click', () => openViewer(piece));
     title.appendChild(titleButton);
     text.append(title, date);
-    stop.append(art, dot, text);
+    stop.append(hit, dot, text);
     return stop;
   }
 
-  // Each year starts with PAGE_SIZE stops and a "Load more" button for the rest; images load lazily as
-  // they scroll near the screen. Pieces arrive newest first. The first stop of each year gets
-  // id="y<year>" for the sidebar link.
-  const PAGE_SIZE = 4;
-
+  // Pieces arrive newest first. The first stop of each year gets id="y<year>" for the sidebar link.
   function renderYear(year, items, stops) {
-    const end = document.createComment(year);   // everything for this year is inserted before this
-    stops.appendChild(end);
-    let shown = 0;
-    let moreRow = null;
-
-    const showMore = () => {
-      const firstNew = shown;
-      let firstStop = null;
-      for (const piece of items.slice(shown, shown + PAGE_SIZE)) {
-        const stop = renderStop(piece, shown === 0 ? 'y' + year : '');
-        firstStop ??= stop;
-        end.before(stop);
-        shown++;
-      }
-      moreRow?.remove();
-      moreRow = null;
-      if (shown < items.length) {
-        const button = el('button', 'more-btn', 'Load more');
-        button.type = 'button';
-        button.addEventListener('click', showMore);
-        const dot = el('div', 'tl');
-        moreRow = el('div', 'stop stop-more');
-        moreRow.append(dot, button);
-        end.before(moreRow);
-        if (firstNew > 0) button.focus({ preventScroll: true });
-      } else if (firstNew > 0) {
-        firstStop.tabIndex = -1;   // the button is gone: hand focus to the first stop that appeared
-        firstStop.focus({ preventScroll: true });
-      }
-    };
-    showMore();
+    items.forEach((piece, i) => stops.appendChild(renderStop(piece, i === 0 ? 'y' + year : '')));
   }
 
   function renderStops(pieces) {
