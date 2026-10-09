@@ -211,8 +211,10 @@
     if (!ocs.length) return empty(list);
     for (const oc of ocs) {
       const card = el('article', 'card');
-      card.style.setProperty('--from', oc.from);
-      card.style.setProperty('--to', oc.to);
+      if (oc.from && oc.to) {
+        card.style.setProperty('--from', oc.from);
+        card.style.setProperty('--to', oc.to);
+      }
       card.append(img(oc.image, oc.name), el('div', 'card-band'), el('div', 'card-name', oc.name));
       list.appendChild(card);
     }
