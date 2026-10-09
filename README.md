@@ -27,10 +27,19 @@ content/art/
   ocs/
     01 OC1.png     one card per image; the name is the filename, a leading number sets the order
     02 OC2.png
-    colors.json    gradient behind each card's art: {"OC1": ["#start", "#end"]}. No entry = no gradient
+    01 OC1.txt     optional description (shown in the popup)
+    colors.json    gradient behind each card's art: { "OC1": [ "#start", "#end" ] }
+    
   2026-05-07 Everything I Learned and Loved.png    one timeline stop per image: "date title"
+  2026-05-07 Everything I Learned and Loved.txt    (optional) description
   2025-03-14 Untitled.jpg                          no date in the name = the file's modified date
+
+  2024-08-02 Three Part Piece/                     multi-piece carousel
+    1.png  2.png  3.png                            shown in filename order
+    description.txt                                (optional) description
 ```
+Click any card or stop to open it in a popup: the image (a carousel with arrows, dots, ←/→ keys and swipe when there are several), the title, the date and the description. Descriptions are plain text; a blank line starts a new paragraph. OC cards work the same way, so `ocs/02 Ace/` can be a folder too.
+
 Newest stops come first, and the sidebar's year links are built from them. Each year shows its first 4 stops and a "Load more" button for the rest, and images load lazily as you scroll. Stops are always 375px wide; the height follows each image's aspect ratio (the server reads the size from the file header). `png`, `jpg`, `webp`, `avif`, `gif` and `heic` all work (HEIC is converted to JPEG by the server on first view). Files starting with `.` (macOS/Samba junk) are ignored. The server lists the folder on each request via `/api/art`, and serves the files from `/content/...`.
 
 ---
