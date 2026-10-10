@@ -7,10 +7,23 @@
    fixed element is an isolated group and the rims' overlay blend would stop seeing the page.
    Paint order is DOM order (no z-index). Sizes are in rem, so the dock scales with the
    1920x1080 design canvas. */
-.dock-wrap {
+/* The three same-box layers. --k scales the whole dock: the mobile dock in Sketch is this exact
+   dock at 1.56006x (pills, icons, strokes and gaps alike), so only --k and the bottom offset change
+   between layouts. --dock-bottom is how far the svg's box (which includes the pills' shadow bleed)
+   hangs below the viewport. Everything inside the svg scales with its viewBox, and the glass panes
+   are sized in % of this box, so they follow automatically. */
+.dock-wrap, .dock-glass, svg.dock-rims {
+  --k: 1;
+  /* Dock width follows the window height: 69.35svh == 39.01rem at 16:9, so wide windows are
+     unchanged, but squarer ones no longer shrink with the width (rem is width-limited there).
+     92vw keeps it on screen in narrow windows. svh, not vh, so mobile toolbars don't resize it. */
+  --dw: min(calc(69.35svh * var(--k)), 92vw);
+  --dock-bottom: calc(var(--dw) * -0.07075);   /* -2.76rem at the design size */
   position: fixed;
-  left: calc(50% - 19.505rem); bottom: -2.76rem;
-  width: 39.010rem; height: 14.635rem;
+  left: calc(50% - var(--dw) / 2); bottom: var(--dock-bottom);
+  width: var(--dw); height: calc(var(--dw) * 0.37516);   /* 14.635 / 39.010 */
+}
+.dock-wrap {
   pointer-events: auto;   /* stays clickable even if a page sets pointer-events: none on its content */
 }
 .dock-wrap svg { width: 100%; height: 100%; display: block; overflow: visible; }
@@ -39,15 +52,12 @@
    the panes' %-of-viewBox geometry lines up with the svg; sits between the BG strip and the
    dock svg in paint order. Fixed for the same Safari reason as the rims below. */
 .dock-glass {
-  position: fixed;
-  left: calc(50% - 19.505rem); bottom: -2.76rem;
-  width: 39.010rem; height: 14.635rem;
   pointer-events: none;
 }
 .dock-glass > div {
   position: absolute;
-  backdrop-filter: blur(0.833rem);
-  -webkit-backdrop-filter: blur(0.833rem);
+  backdrop-filter: blur(calc(var(--dw) * 0.02135));
+  -webkit-backdrop-filter: blur(calc(var(--dw) * 0.02135));
   -webkit-mask-size: 100% 100%; mask-size: 100% 100%;
   -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
 }
@@ -58,12 +68,24 @@
    body level) renders as normal blend. Same box as .dock-wrap; body is the viewport, so
    `bottom` resolves identically. */
 svg.dock-rims {
-  position: fixed;
-  left: calc(50% - 19.505rem); bottom: -2.76rem;
-  width: 39.010rem; height: 14.635rem;
   pointer-events: none; mix-blend-mode: overlay;
 }
 /* Hitboxes are invisible rects drawn before their icon; fx.css makes the icons themselves
    pointer-transparent so hovering the icon still counts as hovering the hitbox. */
 .dock-wrap svg .hitbox { fill: transparent; cursor: pointer; }
 /* Hover scale + glow comes from the shared fx.css (.fx-hit / .fx classes in dock.svg). */
+
+/* ===== mobile (Sketch "Dock (Mobile)", 1080x1920 canvas) =====
+   Opt-in: only pages with a mobile canvas mark <html data-mobile>. In portrait their rem is then
+   19.2 px of the 1080x1920 canvas (same convention as desktop), which is what these values
+   assume. A page without one keeps its 16:9 rem in portrait too, so it keeps the regular dock.
+   The svg box hangs 71.25px below the viewport (the Sketch instance is flush with the bottom),
+   and the BG strip is 294.56px tall (still a 16px blur). */
+@media (orientation: portrait) {
+  html[data-mobile] :is(.dock-wrap, .dock-glass, svg.dock-rims) {
+    --k: 1.56006;
+    --dw: calc(39.010rem * var(--k));   /* mobile stays width-based (rem is 1.7778vw here) */
+    --dock-bottom: -3.711rem;
+  }
+  html[data-mobile] .dock-bg { height: 15.342rem; }
+}
