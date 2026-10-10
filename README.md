@@ -46,6 +46,7 @@ content/art/
 # Shared components
 ### Dock (`dock.js`, `dock.css`, `dock.svg`)
 The navigation Dock at the bottom of the page. Includes the glass pill, the icons, and the progressive-blur background. To use it on a page, add `<script src="/dock.js"></script>` at the end of `<body>` (which should be `position: relative`)
+- Pages with a mobile layout (a 1080x1920 canvas in portrait, like `home.html`) add `data-mobile` to `<html>` to get the mobile dock: the same dock at 1.56x with a taller blur strip. Pages without it keep the regular dock in portrait
 
 ### Sidebar (`sidebar.css`, `sidebar.js`)
 Sidebars used across portfolio pages

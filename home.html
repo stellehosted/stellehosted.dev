@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-mobile>
 <head>
 <meta charset="UTF-8">
 <title>stellehosted.dev</title>
@@ -78,21 +78,33 @@
   .path-band { --r: 1.667rem; height: 33.854rem; }
   .path-band .tint { background: linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 100%); }
 
-  /* Reusable "Glass (Secondary)" surface: frosted fill + outside gradient rim light */
+  /* Reusable "Glass (Secondary)" surface: frosted fill + outside gradient rim light.
+     Component units: every length inside a glass component is a multiple of --u, which is 1rem
+     times the component's --s (scale). On mobile the Sketch pills are the desktop pills scaled up
+     (Socials 1.18556x, Now Playing 1.60530x: blur, shadows, radius, gaps and type alike), so a
+     layout only sets --s plus the box's position. --s inherits, so the album art nested in the
+     Now Playing pill scales with it. */
   .glass-secondary {
-    --glass-radius: 1.25rem;
+    --u: calc(var(--s, 1) * 1rem);
+    --glass-radius: 1.25;
     position: absolute;
-    border-radius: var(--glass-radius);
+    border-radius: calc(var(--glass-radius) * var(--u));
     background: rgba(128,128,128,0.2);
-    backdrop-filter: blur(0.672rem);
-    -webkit-backdrop-filter: blur(0.672rem);
+    backdrop-filter: blur(calc(0.672 * var(--u)));
+    -webkit-backdrop-filter: blur(calc(0.672 * var(--u)));
     box-shadow:
-      0 0 2.5rem rgba(255,255,255,0.12),
-      inset 0 0 1.25rem rgba(255,255,255,0.32);
+      0 0 calc(2.5 * var(--u)) rgba(255,255,255,0.12),
+      inset 0 0 calc(1.25 * var(--u)) rgba(255,255,255,0.32);
   }
-  /* Glass Outline */
+  /* Glass Outline. Each rim is a sibling svg placed after its surface (a backdrop-filter element
+     is an isolated group, so a rim nested inside would blend only against the pill's own fill).
+     Being a sibling, it can't size itself from its surface: the script at the end of <body> keeps
+     its box, viewBox, corner radius and stroke matched to the element named in data-for.
+     --rim-stroke is the stroke width in canvas px. */
   .glass-rim {
+    --rim-stroke: 2;
     position: absolute;
+    left: 0; top: 0; width: 0; height: 0;
     pointer-events: none;
     mix-blend-mode: overlay;
   }
@@ -116,6 +128,7 @@
     line-height: 1;
     color: #fff;
     white-space: nowrap;
+    text-shadow: 0 1.302rem 2.604rem #000;
   }
   .hero-tagline {
     position: absolute;
@@ -127,90 +140,78 @@
     white-space: nowrap;
   }
 
-  /* Socials Pill */
-  .socials, .rim-socials {
+  /* Socials Pill. The outer box is set per layout in rem (Sketch rounds its mobile padding, so
+     it isn't an exact multiple of the desktop one); everything inside is in component units. */
+  .socials {
+    --glass-radius: 1.667;
     left: 9.375rem; top: 30.391rem;
     width: 32.9688rem; height: 3.229rem;
-  }
-  .socials {
-    --glass-radius: 1.667rem;
     display: flex; align-items: center;
-    gap: 2.5rem;
+    gap: calc(2.5 * var(--u));
     padding: 0.833rem 1.667rem;
   }
   /* The link is the hitbox (.fx-hit, see fx.css); its contents (.fx) scale and glow on hover.
-     The ::before pads the hit area a little beyond the avatar + text (0.5rem tall, 0.75rem wide)
-     and stays well inside the 2.5rem gap, so neighbours never overlap or touch. It's out of
+     The ::before pads the hit area a little beyond the avatar + text (0.5 tall, 0.75 wide)
+     and stays well inside the 2.5 gap, so neighbours never overlap or touch. It's out of
      flow, so layout is unchanged. */
   .social-item {
     position: relative; align-self: stretch;
     display: flex; align-items: center;
-    font-size: 1.0417rem;
+    font-size: calc(1.0417 * var(--u));
     color: #f2f0fb;
     text-decoration: none;
     white-space: nowrap;
   }
   .social-item::before {
     content: ""; position: absolute;
-    inset: -0.5rem -0.75rem;
-    border-radius: 0.833rem;
+    inset: calc(-0.5 * var(--u)) calc(-0.75 * var(--u));
+    border-radius: calc(0.833 * var(--u));
   }
-  .social-item .fx { display: flex; align-items: center; gap: 0.417rem; }
+  .social-item .fx { display: flex; align-items: center; gap: calc(0.417 * var(--u)); }
   .social-item .avatar {
-    width: 1.5625rem; height: 1.5625rem;
+    width: calc(1.5625 * var(--u)); height: calc(1.5625 * var(--u));
     border-radius: 50%;
     background-size: cover;
     background-position: center;
     flex-shrink: 0;
   }
 
-  /* Now Playing */
-  .nowplaying, .rim-nowplaying {
-    left: 9.375rem; top: 36.955rem;
-    height: 6.667rem;
-  }
-  /* Pill grows with its text between min and max width; nowplaying.js mirrors the final
-     width onto .rim-nowplaying (a sibling, so it can't size itself from the pill). */
+  /* Now Playing. The pill grows with its text between min and max width. */
   .nowplaying {
+    left: 9.375rem; top: 36.955rem;
+    height: calc(6.667 * var(--u));
     width: max-content;
-    min-width: 24.3229rem;
+    min-width: calc(24.3229 * var(--u));
     max-width: 45rem;
-  }
-  .rim-nowplaying { width: 24.3229rem; }
-  .rim-album {
-    left: 9.375rem; top: 36.955rem;
-    width: 6.667rem; height: 6.667rem;
-  }
-  .nowplaying {
     display: flex; align-items: center;
-    padding-right: 3.333rem;
+    padding-right: calc(3.333 * var(--u));
   }
   /* Art is a fixed height; its width follows the image's aspect ratio (capped so odd/wide covers
-     get cropped rather than swallowing the pill). nowplaying.js mirrors the width onto .rim-album. */
+     get cropped rather than swallowing the pill). */
   .album-art {
     position: relative; display: flex;
-    height: 6.667rem; max-width: 13.333rem;
+    height: calc(6.667 * var(--u)); max-width: calc(13.333 * var(--u));
     flex-shrink: 0;
   }
   .album-art-clip { height: 100%; border-radius: inherit; overflow: hidden; }
-  .album-art-clip img { height: 100%; width: auto; max-width: 13.333rem; object-fit: cover; display: block; }
-  .np-info { margin-left: 1.667rem; min-width: 0; }
+  .album-art-clip img { height: 100%; width: auto; max-width: calc(13.333 * var(--u)); object-fit: cover; display: block; }
+  .np-info { margin-left: calc(1.667 * var(--u)); min-width: 0; }
   /* Empty state (nothing played yet): drop the album art and its rim; text takes the art's place. */
   .no-art .album-art, .no-art ~ .rim-album { display: none; }
-  .no-art .np-info { margin-left: 3.333rem; }
-  .np-title-row { display: flex; align-items: center; gap: 0.625rem; min-width: 0; }
-  
+  .no-art .np-info { margin-left: calc(3.333 * var(--u)); }
+  .np-title-row { display: flex; align-items: center; gap: calc(0.625 * var(--u)); min-width: 0; }
+
   /* Music Visualizer */
   .np-viz {
-    flex-shrink: 0; display: flex; align-items: center; justify-content: center; gap: 0.2rem;
-    position: relative; width: 1.0417rem; height: 1.0417rem;
+    flex-shrink: 0; display: flex; align-items: center; justify-content: center; gap: calc(0.2 * var(--u));
+    position: relative; width: calc(1.0417 * var(--u)); height: calc(1.0417 * var(--u));
   }
   .np-pause {
     position: absolute; inset: 0; width: 100%; height: 100%; fill: #fff;
     opacity: 0; transition: opacity 0.3s ease;
   }
   .np-viz i {
-    display: block; width: 0.2rem; height: 100%; border-radius: 0.1rem; background: #fff;
+    display: block; width: calc(0.2 * var(--u)); height: 100%; border-radius: calc(0.1 * var(--u)); background: #fff;
     transform-origin: center;
     transition: transform 0.3s ease, opacity 0.3s ease;
   }
@@ -222,8 +223,42 @@
   .np-viz.paused .np-pause { opacity: 1; }
   @keyframes np-bar { 0%, 100% { transform: scaleY(0.2); } 50% { transform: scaleY(1); } }
   .np-title, .np-meta { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .np-title { font-weight: 700; font-size: 1.0417rem; color: #fff; }
-  .np-meta { margin-top: 0.417rem; font-size: 1.0417rem; color: rgba(255,255,255,0.5); }
+  .np-title { font-weight: 700; font-size: calc(1.0417 * var(--u)); color: #fff; }
+  .np-meta { margin-top: calc(0.417 * var(--u)); font-size: calc(1.0417 * var(--u)); color: rgba(255,255,255,0.5); }
+
+  /* ===== mobile: Sketch "Home (Mobile)", a 1080x1920 canvas =====
+     Same unit convention, now on the portrait canvas: 1rem = 19.2 canvas px, so 56.25rem is the
+     canvas width and 100rem its height (contain fit, centered). Values are Sketch px / 19.2.
+     Everything is centered on the canvas, so the text blocks use text-align instead of a left. */
+  @media (orientation: portrait) {
+    html { font-size: min(1.7778vw, 1vh); }
+    .canvas {
+      left: calc(50% - 28.125rem); top: calc(50% - 50rem);
+      width: 56.25rem; height: 100rem;
+    }
+    .blur-layer { top: calc(50vh - 50rem); height: 100rem; }
+    .path-band { height: 74.740rem; }                       /* 1435px band, still 0->32px */
+
+    .hero-logo { left: 11.471rem; top: 8.607rem; }          /* same 620px mark, centered at 540,485 */
+    .hero-username, .hero-tagline { left: 0; right: 0; text-align: center; }
+    .hero-username { top: 44.479rem; }
+    .hero-tagline { top: 52.579rem; }
+
+    .socials {
+      --s: 1.18556;
+      left: 8.6056rem; top: 58.204rem;
+      width: 39.272rem; height: 3.9368rem;
+      padding: 1.0417rem 2.0833rem;
+    }
+    /* Centered, and grows symmetrically up to the dock's 1000px width. */
+    .nowplaying {
+      --s: 1.60530;
+      left: 0; right: 0; margin-inline: auto;
+      top: 67.141rem;
+      max-width: 52.083rem;
+    }
+    .rim-album { --rim-stroke: 3.212; }                     /* Sketch scales the art's border here */
+  }
 
 </style>
 </head>
@@ -261,7 +296,7 @@
       <span class="fx"><span class="avatar" style="background-image:url('branding/School.png')"></span>@stevesun28</span>
     </a>
   </div>
-  <svg class="glass-rim rim-socials" viewBox="0 0 633 62" preserveAspectRatio="none">
+  <svg class="glass-rim rim-socials" data-for=".socials" viewBox="0 0 633 62" preserveAspectRatio="none">
     <defs><linearGradient id="rimGradSocials" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0%" stop-color="#fff"></stop>
       <stop offset="50%" stop-color="#fff" stop-opacity="0"></stop>
@@ -284,27 +319,68 @@
       <div class="np-meta" id="np-meta"></div>
     </div>
   </div>
-  <svg class="glass-rim rim-nowplaying" id="np-rim" viewBox="0 0 467 128" preserveAspectRatio="none">
+  <svg class="glass-rim rim-nowplaying" data-for="#np-pill" viewBox="0 0 467 128" preserveAspectRatio="none">
     <defs><linearGradient id="rimGradNP" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0%" stop-color="#fff"></stop>
       <stop offset="50%" stop-color="#fff" stop-opacity="0"></stop>
       <stop offset="100%" stop-color="#fff"></stop>
     </linearGradient></defs>
-    <rect id="np-rim-rect" x="1" y="1" width="465" height="126" rx="23" fill="none" stroke="url(#rimGradNP)" stroke-width="2"></rect>
+    <rect x="1" y="1" width="465" height="126" rx="23" fill="none" stroke="url(#rimGradNP)" stroke-width="2"></rect>
   </svg>
-  <svg class="glass-rim rim-album" id="np-album-rim" viewBox="0 0 128 128" preserveAspectRatio="none">
+  <svg class="glass-rim rim-album" data-for="#np-pill .album-art" viewBox="0 0 128 128" preserveAspectRatio="none">
     <defs><linearGradient id="rimGradAlbum" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0%" stop-color="#fff"></stop>
       <stop offset="50%" stop-color="#fff" stop-opacity="0"></stop>
       <stop offset="100%" stop-color="#fff"></stop>
     </linearGradient></defs>
-    <rect id="np-album-rim-rect" x="1" y="1" width="126" height="126" rx="23" fill="none" stroke="url(#rimGradAlbum)" stroke-width="2"></rect>
+    <rect x="1" y="1" width="126" height="126" rx="23" fill="none" stroke="url(#rimGradAlbum)" stroke-width="2"></rect>
   </svg>
 
 </div>
 
+<script>
+// Glass rims (see .glass-rim): keep each rim's box over the element named in its data-for, and
+// rebuild its viewBox from that element's actual aspect ratio, so the rounded rect is never
+// stretched. The viewBox height stays at its design value (62 or 128 units); the corner radius
+// comes from the surface's own computed border-radius and the stroke from --rim-stroke (canvas px).
+// Runs whenever any surface resizes: text changes, the art loading, a viewport resize, or the
+// switch between the desktop and mobile canvas.
+(() => {
+  const rims = [...document.querySelectorAll('.glass-rim[data-for]')];
+  const pairs = rims.map((rim) => ({ rim, rect: rim.querySelector('rect'), target: document.querySelector(rim.dataset.for) }));
+
+  const sync = () => {
+    const rem = parseFloat(getComputedStyle(document.documentElement).fontSize);
+    for (const { rim, rect, target } of pairs) {
+      const t = target.getBoundingClientRect();
+      if (!t.width || !t.height) continue;   // hidden surface (e.g. no album art): its rim is hidden too
+      const p = rim.parentElement.getBoundingClientRect();
+      rim.style.left = `${(t.left - p.left) / rem}rem`;
+      rim.style.top = `${(t.top - p.top) / rem}rem`;
+      rim.style.width = `${t.width / rem}rem`;
+      rim.style.height = `${t.height / rem}rem`;
+
+      const h = rim.viewBox.baseVal.height;
+      const w = h * t.width / t.height;
+      const unitsPerPx = h / t.height;
+      const stroke = parseFloat(getComputedStyle(rim).getPropertyValue('--rim-stroke')) * (rem / 19.2) * unitsPerPx;
+      const radius = Math.min(parseFloat(getComputedStyle(target).borderTopLeftRadius) * unitsPerPx, h / 2);
+      rim.setAttribute('viewBox', `0 0 ${w} ${h}`);
+      rect.setAttribute('x', stroke / 2);
+      rect.setAttribute('y', stroke / 2);
+      rect.setAttribute('width', w - stroke);
+      rect.setAttribute('height', h - stroke);
+      rect.setAttribute('rx', Math.max(radius - stroke / 2, 0));
+      rect.setAttribute('stroke-width', stroke);
+    }
+  };
+
+  const ro = new ResizeObserver(sync);
+  pairs.forEach(({ target }) => ro.observe(target));
+})();
+</script>
 <script src="fx.js" data-fx></script>
 <script src="dock.js"></script>
-<script src="nowplaying.js?v=4"></script>
+<script src="nowplaying.js?v=5"></script>
 </body>
 </html>
