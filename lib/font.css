@@ -1,5 +1,5 @@
 /* Shared fonts: Futura Now Headline, every cut in /font. Link this from each page instead of
-   declaring @font-face locally:  <link rel="stylesheet" href="/font.css">
+   declaring @font-face locally:  <link rel="stylesheet" href="/lib/font.css">
    Then just use font-family: 'FuturaNowHeadline' with a font-weight (100-950) and font-style.
    Each cut maps to its CSS weight number, so the browser picks the right file by itself. Files are
    only downloaded when text on the page actually uses them. url()s resolve relative to this file. */
