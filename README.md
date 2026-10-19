@@ -45,12 +45,12 @@ content/art/
 ---
 # Shared components
 ### Dock (`dock.js`, `dock.css`, `dock.svg`)
-The navigation Dock at the bottom of the page. Includes the glass pill, the icons, and the progressive-blur background. To use it on a page, add `<script src="/dock.js"></script>` at the end of `<body>` (which should be `position: relative`)
-- Pages with a mobile layout (a 1080x1920 canvas in portrait, like `home.html`) add `data-mobile` to `<html>` to get the mobile dock: the same dock at 1.56x with a taller blur strip. Pages without it keep the regular dock in portrait
+The navigation Dock at the bottom of the page
+- Add `<script src="/dock.js"></script>` at the end of `<body>` (`position: relative`)
 
 ### Sidebar (`sidebar.css`, `sidebar.js`)
 Sidebars used across portfolio pages
-- Title, headings, body-text links, and progressive-blur background
+- Title, headings, body-text links, & progressive-blur background
 - Add `<link rel="stylesheet" href="/sidebar.css">` to `<head>`, put a `<nav class="sidebar">` after the page content (the markup and classes are documented at the top of `sidebar.css`: `.sidebar-title`, `.sidebar-heading`, `.sidebar-group`, `.sidebar-list` / `.sidebar-text`), and add `<script src="/sidebar.js"></script>` at the end of `<body>
 - `sidebar.css` also defines `.glow-text`, the gradient-glow heading style, which pages can use for their own headings
 

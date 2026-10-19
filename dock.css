@@ -5,8 +5,8 @@
    the svg were absolute while the rest were fixed, zooming/scrolling (visual vs layout viewport)
    would slide them out of sync. The rims are a sibling, not a child, of .dock-wrap, because a
    fixed element is an isolated group and the rims' overlay blend would stop seeing the page.
-   Paint order is DOM order (no z-index). Sizes are in rem, so the dock scales with the
-   1920x1080 design canvas. */
+   Paint order is DOM order (no z-index). Sizes use the dock's own --u unit (a 1920x1080
+   contain fit), so the dock never depends on a page's font-size. */
 /* The three same-box layers. --k scales the whole dock: the mobile dock in Sketch is this exact
    dock at 1.56006x (pills, icons, strokes and gaps alike), so only --k and the bottom offset change
    between layouts. --dock-bottom is how far the svg's box (which includes the pills' shadow bleed)
@@ -14,6 +14,7 @@
    are sized in % of this box, so they follow automatically. */
 .dock-wrap, .dock-glass, svg.dock-rims {
   --k: 1;
+  --u: min(1vw, 1.7778vh);   /* the dock's own "rem" (1920x1080 contain fit), so pages' html font-size never matters */
   /* Dock width follows the window height: 69.35svh == 39.01rem at 16:9, so wide windows are
      unchanged, but squarer ones no longer shrink with the width (rem is width-limited there).
      92vw keeps it on screen in narrow windows. svh, not vh, so mobile toolbars don't resize it. */
@@ -33,9 +34,10 @@
    masked to a triangle peaking at i/6 of the band's height, so the blur radius ramps ~linearly
    from 0 at the top edge to 16px at the bottom. position:fixed is deliberate, see dock.js. */
 .dock-bg {
-  --r: 0.833rem;
+  --u: min(1vw, 1.7778vh);
+  --r: calc(0.833 * var(--u));
   position: fixed; left: 0; right: 0; bottom: 0;
-  height: 9.167rem;
+  height: calc(9.167 * var(--u));
   z-index: 0;
   overflow: hidden;
   pointer-events: none;
@@ -76,16 +78,16 @@ svg.dock-rims {
 /* Hover scale + glow comes from the shared fx.css (.fx-hit / .fx classes in dock.svg). */
 
 /* ===== mobile (Sketch "Dock (Mobile)", 1080x1920 canvas) =====
-   Opt-in: only pages with a mobile canvas mark <html data-mobile>. In portrait their rem is then
-   19.2 px of the 1080x1920 canvas (same convention as desktop), which is what these values
-   assume. A page without one keeps its 16:9 rem in portrait too, so it keeps the regular dock.
-   The svg box hangs 71.25px below the viewport (the Sketch instance is flush with the bottom),
-   and the BG strip is 294.56px tall (still a 16px blur). */
+   Applies to every page in portrait: the dock is self-contained, so no page opts in. --u becomes
+   the 1080x1920 contain-fit unit (19.2 px of the canvas, same convention as desktop). The svg box
+   hangs 71.25px below the viewport (the Sketch instance is flush with the bottom), and the BG
+   strip is 294.56px tall (still a 16px blur). */
 @media (orientation: portrait) {
-  html[data-mobile] :is(.dock-wrap, .dock-glass, svg.dock-rims) {
+  .dock-wrap, .dock-glass, svg.dock-rims {
+    --u: min(1.7778vw, 1svh);
     --k: 1.56006;
-    --dw: calc(39.010rem * var(--k));   /* mobile stays width-based (rem is 1.7778vw here) */
-    --dock-bottom: -3.711rem;
+    --dw: calc(39.010 * var(--k) * var(--u));
+    --dock-bottom: calc(-3.711 * var(--u));
   }
-  html[data-mobile] .dock-bg { height: 15.342rem; }
+  .dock-bg { --u: min(1.7778vw, 1svh); height: calc(15.342 * var(--u)); }
 }
