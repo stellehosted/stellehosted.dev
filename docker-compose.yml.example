@@ -9,6 +9,7 @@ services:
       - NAVIDROME_USER=${NAVIDROME_USER}
       - NAVIDROME_PASSWORD=${NAVIDROME_PASSWORD}
       - NAVIDROME_USERNAME_FILTER=${NAVIDROME_USERNAME_FILTER:-}
+      - NOWPLAYING_MOCK=${NOWPLAYING_MOCK:-}
     volumes:
       - ./content:/app/content
     networks:

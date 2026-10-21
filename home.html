@@ -171,9 +171,18 @@
   }
   .album-art-clip { height: 100%; border-radius: inherit; overflow: hidden; }
   .album-art-clip img { height: 100%; width: auto; max-width: calc(13.333 * var(--u)); object-fit: cover; display: block; }
+  /* Album art backdrop (Sketch "album (blur)"): the cover, 192px square starting 32px above/left of
+     the pill, with a 32px gaussian blur, so it fades out to the right. The wrapper clips it to the
+     pill's corners; z-index -1 keeps it above the glass fill but below the art and text. */
+  .np-blur { position: absolute; inset: 0; z-index: -1; border-radius: inherit; overflow: hidden; pointer-events: none; }
+  .np-blur img {
+    position: absolute; left: calc(-1.667 * var(--u)); top: calc(-1.667 * var(--u));
+    width: calc(10 * var(--u)); height: calc(10 * var(--u)); object-fit: cover;
+    filter: blur(calc(1.667 * var(--u)));
+  }
   .np-info { margin-left: calc(1.667 * var(--u)); min-width: 0; }
   /* Empty state (nothing played yet): drop the album art and its rim; text takes the art's place. */
-  .no-art .album-art { display: none; }   /* glass.js hides its rim when the surface has no box */
+  .no-art .album-art, .no-art .np-blur { display: none; }   /* glass.js hides its rim when the surface has no box */
   .no-art .np-info { margin-left: calc(3.333 * var(--u)); }
   .np-title-row { display: flex; align-items: center; gap: calc(0.625 * var(--u)); min-width: 0; }
 
@@ -274,6 +283,7 @@
   </div>
 
   <div class="nowplaying glass-secondary no-art" id="np-pill">
+    <div class="np-blur" aria-hidden="true"><img id="np-cover-blur" alt=""></div>
     <div class="album-art glass-secondary">
       <div class="album-art-clip"><img id="np-cover" src="album.jpg" alt="Album cover"></div>
     </div>

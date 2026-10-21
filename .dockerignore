@@ -5,3 +5,4 @@ content/
 .claude/
 .DS_Store
 .git
+.vscode

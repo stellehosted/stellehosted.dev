@@ -5,7 +5,8 @@ const NOWPLAYING_POLL_MS = 15000;
 const titleEl = document.getElementById('np-title');
 const metaEl = document.getElementById('np-meta');
 const coverEl = document.getElementById('np-cover');
-const vizEl = document.getElementById('np-viz');
+const coverBlurEl = document.getElementById('np-cover-blur');
+const vizEl =document.getElementById('np-viz');
 const pillEl = document.getElementById('np-pill');
 
 vizEl.classList.add('paused');
@@ -27,7 +28,7 @@ async function pollNowPlaying() {
       titleEl.textContent = data.title || 'Unknown title';
       metaEl.textContent = [data.artist, data.album].filter(Boolean).join(' • ');
       if (data.coverArtId !== lastCoverArtId) {
-        coverEl.src = `/api/coverart?id=${encodeURIComponent(data.coverArtId)}`;
+        coverEl.src = coverBlurEl.src = `/api/coverart?id=${encodeURIComponent(data.coverArtId)}`;
         lastCoverArtId = data.coverArtId;
       }
     } else {

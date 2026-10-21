@@ -10,6 +10,7 @@ My personal website, and a perpetual work in progress...
 
 ### Local Testing
 `PORT=3000 node server/server.js`
+- Set `NOWPLAYING_MOCK=1` in `.env` to seed test nowPlaying data
 
 <br>
 
@@ -24,64 +25,47 @@ My art portfolio over the years!
 
 <br>
 
-# Library Components
-### Dock (`lib/dock.js`, `dock.css`, `dock.svg`)
-The navigation Dock at the bottom of the page
-- Add `<script src="/lib/dock.js"></script>` at the end of `<body>`
-- `position: relative`
+# Library Components (`/lib`)
+### UI
 
-### Sidebar (`lib/sidebar.css`, `sidebar.js`)
-Sidebars used across portfolio pages
-- Title, headings (selection pills with a light: hover shows the pill, and the heading whose section is on screen lights up), body-text links, & progressive-blur background
-- Add `<link rel="stylesheet" href="/lib/sidebar.css">` to `<head>`, put a `<nav class="sidebar">` after the page content (the markup and classes are documented at the top of `sidebar.css`: `.sidebar-title`, `.sidebar-heading`, `.sidebar-group`, `.sidebar-list` / `.sidebar-text`), and add `<script src="/lib/sidebar.js"></script>` at the end of `<body>
-- `sidebar.css` also defines `.glow-text`, the gradient-glow heading style, which pages can use for their own headings
-
-### Glass (`lib/glass.css`, `lib/glass.js`)
-The Sketch "Glass" and "Glass (Secondary)" styles: frosted fill, 16px background blur, outer + inner glow, and the overlay-blended gradient rim
-- Add `<link rel="stylesheet" href="/lib/glass.css">` to `<head>` and `<script src="/lib/glass.js"></script>` at the end of `<body>`
-- Put `class="glass"` or `class="glass-secondary"` on any element and give it its own `position` and size. Optional: `--glass-radius` (in `--u` units, default 1.25), `--s` (scale, e.g. on mobile), `--rim-stroke` (canvas px, default 2)
-- `glass.js` adds and sizes the rim for you (nothing to write in the markup). For glass added later, call `glassRims()`
-- Keep the rim's container free of `transform` / `z-index` / `position: fixed`, or the overlay blend can't see the page behind it
-
-### glowFx (`lib/glowFx.css`, `lib/glowFx.js`)
-The hover effect for icons and text: scale up 12% with a soft white glow. The dock uses it, as do the socials on `home.html` and the OC names on `/art`
-- Add `<script src="/lib/glowFx.js"></script>` at the end of `<body>` (it loads `glowFx.css` itself; `dock.js` includes it too, so it's safe twice)
-- Put `class="glow-fx-hit"` on whatever should react to the pointer and `class="glow-fx"` on the thing inside it that scales and glows (in SVG, the `.glow-fx` follows its hitbox as a sibling). Optional: `--glow-fx-scale`
-- The hitbox itself never moves, so the hover area doesn't shrink while it animates
-
-### cardFx (`lib/cardFx.css`)
-A white glow that fades in along a card's inside edge on hover or keyboard focus. CSS only, and it doesn't touch the card's own blur
-- Add `<link rel="stylesheet" href="/lib/cardFx.css">` to `<head>`
-- Put `class="card-fx"` on the card and `class="card-fx-hit"` on whatever should react to the pointer (the card itself, or a wrapper around it)
-- Optional: `--card-fx-color`, `--card-fx-size` (default `2.5rem`), `--card-fx-time`
-- It uses the card's `::after`, so the card shouldn't have its own
-
-### Fonts (`lib/font.css`, `lib/font/`)
-- Add `<link rel="stylesheet" href="/lib/font.css">` to a page's `<head>`
-- Use `font-family: 'FuturaNowHeadline'` with the `font-weight` / `font-style` you want
+| Name | File | Description | Usage | Notes |
+|---|---|---|---|---|
+| **Glass** | `glass.*` | "Glass" and "Glass (Secondary)" styles | - `<head>`: `<link rel="stylesheet" href="/lib/glass.css">`<br>- `<body>` End: `<script src="/lib/glass.js"></script>`<br>- `class="glass"` or `class="glass-secondary"` | **Includes:** Fill, 16px background blur, outer + inner glow, and the overlay-blended rim<br>- Give elements `position` and size<br>- Optional: `--glass-radius` (in `--u` units, default 1.25), `--s` (scale, e.g. on mobile), `--rim-stroke` (canvas px, default 2)<br>- Keep the rim's container free of `transform` / `z-index` / `position: fixed`, or the overlay blend can't see the page behind it |
+| **Dock** | `dock.*` | The navigation Dock at the bottom of the page | - `<body>` End: `<script src="/lib/dock.js"></script>`<br>- `position: relative` | |
+| **Sidebar** | `sidebar.*` | Sidebars used across portfolio pages | - `<head>`: `<link rel="stylesheet" href="/lib/sidebar.css">`<br>- `<nav class="sidebar">` after the page content (the markup and classes are documented at the top of `sidebar.css`: `.sidebar-title`, `.sidebar-heading`, `.sidebar-group`, `.sidebar-list` / `.sidebar-text`)<br>- `<body>` End: `<script src="/lib/sidebar.js"></script>` | **Includes:** Title/Heading text styles, selection/hover FX, body-text links, & background<br>- `sidebar.css` also defines `.glow-text`, the gradient-glow heading style, which pages can use for their own headings |
+| **Fonts** | `font.*`, `font/` | Futura Now Headline | - `<head>`: `<link rel="stylesheet" href="/lib/font.css">`<br>- Use `font-family: 'FuturaNowHeadline'` with the `font-weight` / `font-style` you want | |
 
 <br>
 
-# Adding Content
-All contents are in `content/` (docker-compose: `./content` → `/app/content`)
+### Effects
+
+| Name | File | Description | Usage | Notes |
+|---|---|---|---|---|
+| **glowFx** | `glowFx.*` | Scale up and outer glow on hover/focus | **Used:** Text & icons w/o a style<br>- `<body>` End: `<script src="/lib/glowFx.js"></script>` (it loads `glowFx.css` itself; `dock.js` includes it too, so it's safe twice)<br>- Put `class="glow-fx-hit"` on whatever should react to the pointer and `class="glow-fx"` on the thing inside it that scales and glows (in SVG, the `.glow-fx` follows its hitbox as a sibling) | - Optional: `--glow-fx-scale`<br>- The hitbox itself never moves, so the hover area doesn't shrink while it animates |
+| **cardFx** | `cardFx.*` | Brightens a card's inner glow on hover/focus | **Used:** Cards ("Glass" or "Glass (Secondary)" style)<br>- `<head>`: `<link rel="stylesheet" href="/lib/cardFx.css">`<br>- Put `class="card-fx"` on the card and `class="card-fx-hit"` on whatever should react to the pointer (the card itself, or a wrapper around it) | - Optional: `--card-fx-color`, `--card-fx-size` (default `2.5rem`), `--card-fx-time`<br>- It uses the card's `::after`, so the card shouldn't have its own |
+
+<br>
+
+# Adding Content (`content/`)
+docker-compose: `./content` → `/app/content`
 
 ### Art (`/art`)
 ```
 content/art/
   ocs/
-    01 OC1.png     one card per image; the name is the filename, a leading number sets the order
+    01 OC1.png              oc name = filename; shown in order by number
+    01 OC1.txt              (optional) description
     02 OC2.png
-    01 OC1.txt     optional description (shown in the popup)
-    colors.json    gradient behind each card's art: { "OC1": [ "#start", "#end" ] }
+    colors.json             card BG gradient { "OC1": [ "#start", "#end" ] }
     
-  2026-05-07 Everything I Learned and Loved.png    one timeline stop per image: "date title"
-  2026-05-07 Everything I Learned and Loved.txt    (optional) description
-  2025-03-14 Untitled.jpg                          no date in the name = the file's modified date
+  2026-05-07 artwork.png    one timeline stop per image: "date title"
+  2026-05-07 artwork.txt    (optional) description
+  noDate.jpg                no date in filename falls back to modification date
 
-  2024-08-02 Three Part Piece/                     multi-piece carousel
-    1.png  2.png  3.png                            shown in filename order
-    description.txt                                (optional) description
+  2024-08-02 multi-art/     multi-piece carousel
+    1.png  2.png  3.png     shown in filename order
+    description.txt         (optional) description
 ```
-- Art cards are a fixed height (447px photo) and their width follows the image, so each row fits as many as its width allows. The timeline labels each row with its newest date
-- Images supported: `png`, `jpg`, `webp`, `avif`, `gif` and `heic` all work 
+
+- Formats supported: `png`, `jpg`, `webp`, `avif`, `gif` and `heic` 
 - Server lists the folder on each request via `/api/art`, and serves the files from `/content/...`.

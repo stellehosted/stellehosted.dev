@@ -5,6 +5,9 @@
 // Run with env vars set, e.g.:
 //   NAVIDROME_URL=http://127.0.0.1:4533 NAVIDROME_USER=stelle NAVIDROME_PASSWORD=... node server.js
 
+// Local runs: pick up ../.env (Docker passes these through docker-compose instead; already-set vars win).
+try { process.loadEnvFile(require('path').join(__dirname, '..', '.env')); } catch {}
+
 const http = require('http');
 const crypto = require('crypto');
 const fs = require('fs');
@@ -19,6 +22,9 @@ const NAVIDROME_USER = process.env.NAVIDROME_USER;
 const NAVIDROME_PASSWORD = process.env.NAVIDROME_PASSWORD;
 // Optional: Only show now-playing entries from this Subsonic username (if others share the same server).
 const NAVIDROME_USERNAME_FILTER = process.env.NAVIDROME_USERNAME_FILTER;
+
+// Test data instead of Navidrome: see server/mock.js.
+const MOCK = process.env.NOWPLAYING_MOCK ? require('./mock') : null;
 
 const SITE_ROOT = path.join(__dirname, '..');
 // Uploaded content (art, later photos/blog). A volume in Docker (./content), so it can be a Samba share.
@@ -426,13 +432,14 @@ const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, `http://${req.headers.host}`);
 
   if (url.pathname === '/api/nowplaying') {
-    const data = await fetchNowPlaying();
+    const data = MOCK ? MOCK.mockNowPlaying() : await fetchNowPlaying();
     res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
     res.end(JSON.stringify(data));
     return;
   }
 
   if (url.pathname === '/api/coverart') {
+    if (MOCK) { MOCK.mockCoverArt(res, url.searchParams.get('id')); return; }
     await handleCoverArt(req, res, url.searchParams.get('id'));
     return;
   }
