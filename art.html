@@ -9,63 +9,60 @@
 <link rel="apple-touch-icon" href="/branding/apple-touch-icon.png">
 <link rel="stylesheet" href="/lib/font.css">
 <link rel="stylesheet" href="/lib/sidebar.css">
+<link rel="stylesheet" href="/lib/glass.css">
 <style>
   /* Same unit system as home.html: 1rem == 1 real Sketch unit on the 1920x1080 canvas, so every measurement below is the Sketch ("Art" frame) value / 19.2. Asset URLs are absolute because this page is served at /art (and /art/). */
+  /* The document itself scrolls (no inner scroll box): a position:fixed scroller would be an
+     isolated group, and the glass rims' overlay blend (glass.js) would stop seeing the page. */
   html {
     font-size: min(1vw, 1.7778vh);
+    scrollbar-width: none;
   }
-
+  html::-webkit-scrollbar { display: none; }
+  @media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  html, body { height: 100%; }
   body {
     background: #06060c;
     font-family: 'FuturaNowHeadline', sans-serif;
     color: #fff;
-    overflow: hidden;
-    position: relative;
   }
   a { color: inherit; text-decoration: none; }
 
   .bg {
-    position: fixed; inset: 0; z-index: 0;
+    position: fixed; inset: 0; z-index: -1;   /* under the in-flow content */
     background-image: url('/branding/Banner (Personal).png');
     background-size: cover;
     background-position: center;
   }
 
-  /* ===== layers, back to front (DOM order): .bg, .scroller, then the sidebar (its blur strip +
-     nav, from sidebar.js), then the dock (appended to <body> by dock.js, along with its own blur strip).
-     Neither component has a transform / z-index, or the dock rims' overlay blend would stop seeing
-     the page. They rely on being later in the DOM to paint over the scroller. */
+  /* ===== layers, back to front (DOM order): .bg (fixed, z -1), the content (scrolls with the
+     document), then the sidebar (its blur strip + nav, from sidebar.js), then the dock (appended to
+     <body> by dock.js, along with its own blur strip). Neither component has a transform / z-index,
+     or the dock rims' overlay blend would stop seeing the page. They rely on being later in the DOM
+     to paint over the content. */
 
-  /* ===== scrolling content ===== */
-  /* Covers the whole window, so content scrolls all the way up to the top edge and down under the
-     dock's blur on tall screens (not just within the 16:9 canvas). Full width so the wheel works
-     anywhere. */
-  .scroller {
-    position: fixed; inset: 0;
-    overflow-y: auto; overflow-x: hidden;
-    scrollbar-width: none;
-  }
-  .scroller::-webkit-scrollbar { display: none; }
-  @media (prefers-reduced-motion: no-preference) { .scroller { scroll-behavior: smooth; } }
-
-  /* Content column: x=600, 1220 wide, first heading 100px (5.208rem) below the top of the *window*, so
-     on a tall window it doesn't sink into the letterbox bar the way the centered sidebar does.
-     Bottom padding lets the last stop scroll clear of the dock. */
+  /* Content column: x=502, first heading 100px (5.208rem) below the top of the *window*, so on a
+     tall window it doesn't sink into the letterbox bar the way the centered sidebar does. Bottom
+     padding lets the last row scroll clear of the dock. */
   .content {
-    width: 63.542rem;
-    margin-left: calc(50% - 50rem + 31.25rem);
+    position: relative;
+    width: 67.708rem;
+    margin-left: calc(50% - 50rem + 26.146rem);
     padding: 5.208rem 0 12rem;
   }
   .content section { scroll-margin-top: 5.208rem; }
-  .content h2 { font-size: 2.0833rem; }   /* class="glow-text" comes from sidebar.css */
+  .content h2 { font-size: 2.0833rem; }   /* 40px; class="glow-text" comes from sidebar.css */
 
-  /* OC's: 385x500 cards, gap 32. The shape is fixed, so one card (or four) never stretches or
-     squashes; three fill the row and more wrap onto the next. */
-  .ocs { display: flex; flex-wrap: wrap; gap: 1.667rem; margin-top: 1.042rem; }
-  .card-hit { flex: 0 0 20.069rem; }
+  /* OC's: 385x500 cards, gap 32, in a Glass (Secondary) panel (glass.css: radius 24, padding 40).
+     The card shape is fixed; the panel shrinks to fit fewer than three and wraps more. */
+  .ocs {
+    display: flex; flex-wrap: wrap; gap: 1.667rem;
+    width: fit-content; max-width: 100%;
+    margin-top: 1.042rem;
+    padding: 2.083rem;
+  }
+  .card-hit { flex: 0 0 auto; width: 20.069rem; }   /* a real width, so the panel's fit-content sees it */
   .card {
     position: relative; display: block; width: 100%;
     aspect-ratio: 385 / 500;
@@ -73,8 +70,12 @@
     overflow: hidden;
     background: linear-gradient(to bottom right, var(--from), var(--to));
   }
-  /* Drop an <img> in a card and it fills it: <article class="card"><img src="..."> */
-  .card > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  /* The art fills the card. A cut-out (transparent png) gets the Sketch "Hero" offset shadow in the
+     card's start color; on an opaque image it's hidden behind the image itself. */
+  .card > img {
+    position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+    filter: drop-shadow(-1.042rem -0.417rem 0 var(--from, transparent));
+  }
   /* "Name BG": 137px frosted band, slanted top edge (points from the Sketch shape) */
   .card-band {
     position: absolute; left: 0; right: 0; bottom: 0;
@@ -94,75 +95,105 @@
     stroke-linejoin: round;
   }
 
-  /* More: timeline. Each .stop is one piece of art: [art 375x500] [timeline column 32] [title/date].
-     The line runs unbroken from one stop to the next (see the margin note below). */
-  .more { margin-top: 3.333rem; }
-  .stops { margin-top: 1.042rem; }
-  .stop {
+  /* More: a timeline of rows of art cards.
+     Each row: [date, right-aligned to x=570] 15 [16px timeline] 49 [cards, gap 32, 1152 wide].
+     Every card's photo is the same height (447, as in Sketch); its width follows the art's aspect
+     ratio, and the script fills each row with as many cards as fit the 1152. */
+  .more { margin-top: 4.375rem; }   /* 84 below the OC panel */
+  .rows { margin-top: 1.042rem; }
+  .row {
     display: grid;
-    grid-template-columns: 19.531rem 3.333rem 1.667rem 1.667rem 1fr;   /* art | 64 gap | timeline | 32 gap | text */
-    scroll-margin-top: 5.208rem;
+    grid-template-columns: 3.542rem 0.781rem 0.833rem 2.552rem 1fr;
   }
-  /* The 64px between stops is margin on the art, not padding on the row, so it's *inside* the row
-     and the timeline column (which stretches to the row's height) spans it. */
-  .stop:not(:last-child) .art-hit { margin-bottom: 3.333rem; }
-  /* Fixed 375px wide; the height follows the art's own aspect ratio (set inline from the file's
-     size, so the box is the right shape before its image has loaded). */
-  .art-hit { position: relative; align-self: start; }
-  .stop-art {
-    position: relative; display: block;
-    aspect-ratio: 375 / 500;
+  /* Year links land on a card; the extra 16px puts its row's dot at the usual 100px from the top. */
+  .row-cards > .art-hit { scroll-margin-top: calc(5.208rem + 0.833rem); }
+  .row-date {
+    grid-column: 1; justify-self: end;
+    margin-top: 0.208rem;
+    font-size: 1.0417rem; line-height: 1.2; white-space: nowrap;
+  }
+  /* The timeline: a 16px dot at the top of each row, and a 5px line from it down to the next row's
+     dot. The last row closes with a second dot just below it, so the line never trails off. */
+  .row-tl { grid-column: 3; position: relative; }
+  .row-tl::before, .row-end {
+    content: "";
+    position: absolute; left: 0; top: 0;
+    width: 0.833rem; height: 0.833rem;
+    border-radius: 50%;
+    background: #fff;
+  }
+  .row-tl::after {
+    content: "";
+    position: absolute; left: calc(50% - 0.13rem); top: 0.833rem; bottom: 0;
+    width: 0.26rem;
+    background: #fff;
+  }
+  .row-end { top: 100%; }
+  .row:not(:last-child) .row-end { display: none; }
+  /* Cards start 16px below the dot; 16px under them (+16 at the top of the next row) makes the
+     32px row gap. */
+  .row-cards {
+    grid-column: 5;
+    display: flex; gap: 1.667rem; align-items: flex-start;
+    padding: 0.833rem 0;
+  }
+
+  /* Art card: Glass (Secondary), radius 16. Photo 447 tall; the card's width is set inline from the
+     file's size (see renderCard), so the box is the right shape before its image has loaded. Then
+     the title and date. Behind the photo sits a 25.6px-blurred copy of it, which bleeds the art's
+     colors down into the frosted area under it. */
+  .art-hit .art-fx { display: block; position: relative; width: 16.667rem; }   /* 320 when the size is unknown */
+  .art-card {
+    --glass-radius: 0.833;
+    position: relative;
+    display: flex; flex-direction: column; gap: 0.833rem;
+    padding-bottom: 0.833rem;
+    overflow: hidden;
+    transition: box-shadow 0.15s ease;
+  }
+  .art-photo {
+    position: relative;
+    height: 23.281rem;   /* 447 */
     border-radius: 0.417rem;
     overflow: hidden;
-    box-shadow: 0 0 1.667rem rgba(0,0,0,0.5);
-    background: linear-gradient(to bottom right, rgba(255,255,255,0.1), rgba(255,255,255,0.03));
   }
-  .stop-art > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .art-photo > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .art-blur {
+    position: absolute; left: 0; top: 0;
+    width: 100%; height: 23.281rem;
+    object-fit: cover;
+    filter: blur(1.333rem);
+  }
+  .art-info {
+    position: relative;
+    display: flex; flex-direction: column; gap: 0.417rem;
+    padding: 0 0.833rem;
+    text-align: center;
+  }
+  .art-title { font-size: 1.0417rem; font-weight: 400; line-height: 1.2; }   /* 20/24 */
+  .art-date { font-size: 0.625rem; line-height: 1.1; color: rgba(255,255,255,0.5); }   /* 12px, 50% */
   /* Off-screen images have their src removed (see the observer in the script): no alt-text flash. */
   img:not([src]) { visibility: hidden; }
 
-  /* The "stop": a 32px ring with 5px lines above and below, ring centered 80px down the row.
-     The ring is hollow, so the two lines are separate pieces that end at its edges. */
-  .tl { position: relative; grid-column: 3; }
-  .tl::before, .tl::after {
-    content: "";
-    position: absolute; left: calc(50% - 0.1302rem);
-    width: 0.2604rem;
-    background: #fff;
-  }
-  .tl::before { top: 0; height: 3.333rem; }
-  .tl::after  { top: 5rem; bottom: 0; }
-  /* The line ends at the ring at both ends of the whole timeline instead of trailing off. */
-  .stop:first-child .tl::before, .stop:last-child .tl::after { display: none; }
-  .tl-dot {
-    position: absolute; left: 0; top: 3.333rem;
-    width: 1.667rem; height: 1.667rem;
-    border: 0.2604rem solid #fff;
-    border-radius: 50%;
-  }
-
-  /* Text block: title's vertical center lines up with the ring's center (58px + half a 44px line) */
-  .stop-text { grid-column: 5; padding-top: 3.021rem; }
-  .stop-title { font-size: 2.0833rem; font-weight: 700; line-height: 1.1; }
-  .stop-date { display: block; font-size: 1.0417rem; line-height: 1.6; }
   /* Hover glow (fx.css): .art-hit is the hitbox and stays put, the art inside it (.fx) scales and
      glows. The button is a sibling of the art, not inside it, so it keeps its clicks (.fx is
      pointer-transparent). A gentler scale than the default: the art is big, and the OC cards would
-     otherwise overlap their neighbors. */
-  .art-hit { --fx-scale: 1.04; }
-  /* Every card / stop opens the viewer. The art's own button covers it; the title is a button too. */
+     otherwise overlap their neighbors. On a glass art card the glow is a box-shadow instead of
+     fx's drop-shadow filter: a filter would cut the card's background blur off from the page. */
+  .art-hit { position: relative; --fx-scale: 1.04; }
+  .art-hit.fx-hit:hover .art-fx { filter: none; }
+  .art-hit.fx-hit:hover .art-card {
+    box-shadow:
+      0 0 0.417rem rgba(255,255,255,0.9),
+      0 0 2.5rem rgba(255,255,255,0.12),
+      inset 0 0 1.25rem rgba(255,255,255,0.32);
+  }
+  /* Every card opens the viewer: an invisible button covers it. */
   .art-open {
     position: absolute; inset: 0; width: 100%; height: 100%;
     padding: 0; border: 0; background: none; cursor: pointer;
   }
-  .art-open:focus-visible { outline: 0.208rem solid #fff; outline-offset: -0.208rem; }
-  .title-open {
-    font: inherit; color: inherit; text-align: left;
-    padding: 0; border: 0; background: none; cursor: pointer;
-    transition: opacity 0.15s ease;
-  }
-  .title-open:hover { opacity: 0.7; }
-  .title-open:focus-visible { outline: 0.208rem solid #fff; outline-offset: 0.208rem; }
+  .art-open:focus-visible { outline: 0.208rem solid #fff; outline-offset: 0.208rem; border-radius: 0.833rem; }
   /* "3 images" pill on art that opens into a carousel */
   .multi-badge {
     position: absolute; top: 0.833rem; right: 0.833rem;
@@ -238,20 +269,18 @@
 <body>
 
 <div class="bg"></div>
-<main class="scroller">
-  <div class="content">
+<main class="content">
 
-    <section id="ocs">
-      <h2 class="glow-text">OC’s</h2>
-      <div class="ocs" id="ocs-list"></div>
-    </section>
+  <section id="ocs">
+    <h2 class="glow-text">OC’s</h2>
+    <div class="ocs glass-secondary" id="ocs-list"></div>
+  </section>
 
-    <section id="more" class="more">
-      <h2 class="glow-text">More</h2>
-      <div class="stops" id="stops"></div>
-    </section>
+  <section id="more" class="more">
+    <h2 class="glow-text">More</h2>
+    <div class="rows" id="rows"></div>
+  </section>
 
-  </div>
 </main>
 
 <nav class="sidebar">
@@ -289,15 +318,15 @@
   };
   // Art images load as they approach the screen and unload (src removed, so the browser can drop the
   // decoded bitmap) once they're a screen away. Every box is sized up front (fixed aspect ratio), so
-  // none of this moves the layout. The observer watches the image's box, not the src-less <img>.
-  const scroller = document.querySelector('.scroller');
+  // none of this moves the layout. The observer watches the card, not the src-less <img>s in it.
   const lazy = new IntersectionObserver((entries) => {
     for (const { target, isIntersecting } of entries) {
-      const image = target.querySelector(':scope > img');
-      if (isIntersecting) image.src = image.dataset.src;
-      else image.removeAttribute('src');
+      for (const image of target.querySelectorAll('img[data-src]')) {
+        if (isIntersecting) image.src = image.dataset.src;
+        else image.removeAttribute('src');
+      }
     }
-  }, { root: scroller, rootMargin: '100% 0px' });
+  }, { rootMargin: '100% 0px' });
   const img = (src, alt) => {
     const node = el('img');
     node.dataset.src = src; node.alt = alt;
@@ -306,7 +335,7 @@
   };
   const empty = (parent) => parent.appendChild(el('p', 'empty', 'Nothing here yet.'));
 
-  // Wraps a card / stop's art in its hover hitbox (see fx.css): the art gets a "3 images" pill when
+  // Wraps a card's art in its hover hitbox (see fx.css): the art gets a "3 images" pill when
   // the entry is a carousel, and the invisible button over it opens the viewer. Returns the hitbox.
   function hitbox(art, entry) {
     art.classList.add('fx');
@@ -404,59 +433,85 @@
     return `${+m}/${+d}/${y.slice(2)}`;
   };
 
-  function renderStop(piece, id) {
-    const stop = el('article', 'stop');
-    if (id) stop.id = id;
+  // One art card: blurred copy, photo, title + date (see .art-card). The .art-fx box is what scales
+  // on hover; the glass rim (glass.js) goes inside it, next to the card, so it scales along.
+  function renderCard(piece) {
     const cover = piece.images[0];
-    const art = el('div', 'stop-art');
-    if (cover.width && cover.height) art.style.aspectRatio = `${cover.width} / ${cover.height}`;
-    art.append(img(cover.src, piece.title));
-    const hit = hitbox(art, piece);
-    lazy.observe(art);
-    const dot = el('div', 'tl');
-    dot.appendChild(el('span', 'tl-dot'));
-    const date = el('time', 'stop-date', shortDate(piece.date));
+    const blurred = img(cover.src, '');
+    blurred.className = 'art-blur';
+    const photo = el('div', 'art-photo');
+    photo.appendChild(img(cover.src, piece.title));
+    const date = el('time', 'art-date', shortDate(piece.date));
     date.dateTime = piece.date;
-    const text = el('div', 'stop-text');
-    const title = el('h3', 'stop-title');
-    const titleButton = el('button', 'title-open', piece.title);
-    titleButton.type = 'button';
-    titleButton.addEventListener('click', () => openViewer(piece));
-    title.appendChild(titleButton);
-    text.append(title, date);
-    stop.append(hit, dot, text);
-    return stop;
+    const info = el('div', 'art-info');
+    info.append(el('h3', 'art-title', piece.title), date);
+    const card = el('article', 'art-card glass-secondary');
+    card.append(blurred, photo, info);
+    lazy.observe(card);
+    const box = el('div', 'art-fx');
+    box.style.width = `${cardWidth(cover)}rem`;
+    box.appendChild(card);
+    return hitbox(box, piece);
   }
 
-  // Pieces arrive newest first. The first stop of each year gets id="y<year>" for the sidebar link.
-  function renderYear(year, items, stops) {
-    items.forEach((piece, i) => stops.appendChild(renderStop(piece, i === 0 ? 'y' + year : '')));
+  // Card width (rem) for a fixed 447-tall photo: the art's aspect ratio, kept between 160 and the
+  // full 1152 row (a wider panorama is cropped to fit). 320 if the size is unknown.
+  const PHOTO_H = 23.281, ROW_W = 60, GAP = 1.667, MIN_W = 8.333;
+  const cardWidth = (image) => image.width && image.height
+    ? Math.min(ROW_W, Math.max(MIN_W, PHOTO_H * image.width / image.height))
+    : 16.667;
+
+  // Pieces arrive newest first and fill rows in order, across years: a row takes cards until the
+  // next one would overflow the 1152 width (rem, so it's the same at every window size). Each row is
+  // labeled with the date of its first (newest) piece. The first card of each year gets
+  // id="y<year>" for the sidebar link (on the card, not the row: one row can hold two years' starts).
+
+  function renderRow(items) {
+    const row = el('div', 'row');
+    const date = el('time', 'row-date', shortDate(items[0].date));
+    date.dateTime = items[0].date;
+    const tl = el('div', 'row-tl');
+    tl.appendChild(el('span', 'row-end'));
+    const cards = el('div', 'row-cards');
+    for (const piece of items) cards.appendChild(renderCard(piece));
+    row.append(date, tl, cards);
+    return row;
   }
 
-  function renderStops(pieces) {
-    const stops = document.getElementById('stops');
+  function renderRows(pieces) {
+    const rows = document.getElementById('rows');
     const years = document.getElementById('years');
-    if (!pieces.length) return empty(stops);
-    const byYear = new Map();
+    if (!pieces.length) return empty(rows);
+    let row = [], used = 0;
     for (const piece of pieces) {
-      const year = piece.date.slice(0, 4);
-      if (!byYear.has(year)) byYear.set(year, []);
-      byYear.get(year).push(piece);
+      const w = cardWidth(piece.images[0]);
+      if (row.length && used + GAP + w > ROW_W + 0.01) {
+        rows.appendChild(renderRow(row));
+        row = []; used = 0;
+      }
+      used += (row.length ? GAP : 0) + w;
+      row.push(piece);
     }
-    for (const [year, items] of byYear) {
+    if (row.length) rows.appendChild(renderRow(row));
+    const cards = rows.querySelectorAll('.art-hit');
+    pieces.forEach((piece, i) => {
+      const year = piece.date.slice(0, 4);
+      if (document.getElementById('y' + year)) return;
+      cards[i].id = 'y' + year;
       const link = el('a', '', year);
       link.href = '#y' + year;
       years.appendChild(el('li')).appendChild(link);
-      renderYear(year, items, stops);
-    }
+    });
   }
 
   fetch('/api/art')
     .then((res) => res.json())
-    .then(({ ocs, pieces }) => { renderOcs(ocs); renderStops(pieces); })
-    .catch(() => { empty(document.getElementById('ocs-list')); empty(document.getElementById('stops')); });
+    .then(({ ocs, pieces }) => { renderOcs(ocs); renderRows(pieces); })
+    .catch(() => { empty(document.getElementById('ocs-list')); empty(document.getElementById('rows')); })
+    .finally(() => window.glassRims?.());   // rims for the cards that were just added
 </script>
 <script src="/lib/sidebar.js"></script>
+<script src="/lib/glass.js"></script>
 <script src="/lib/dock.js"></script>
 </body>
 </html>

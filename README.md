@@ -32,7 +32,7 @@ The navigation Dock at the bottom of the page
 
 ### Sidebar (`lib/sidebar.css`, `sidebar.js`)
 Sidebars used across portfolio pages
-- Title, headings, body-text links, & progressive-blur background
+- Title, headings (selection pills with a light: hover shows the pill, and the heading whose section is on screen lights up), body-text links, & progressive-blur background
 - Add `<link rel="stylesheet" href="/lib/sidebar.css">` to `<head>`, put a `<nav class="sidebar">` after the page content (the markup and classes are documented at the top of `sidebar.css`: `.sidebar-title`, `.sidebar-heading`, `.sidebar-group`, `.sidebar-list` / `.sidebar-text`), and add `<script src="/lib/sidebar.js"></script>` at the end of `<body>
 - `sidebar.css` also defines `.glow-text`, the gradient-glow heading style, which pages can use for their own headings
 
@@ -69,6 +69,6 @@ content/art/
     1.png  2.png  3.png                            shown in filename order
     description.txt                                (optional) description
 ```
-- Stops are fixed 375px wide
+- Art cards are a fixed height (447px photo) and their width follows the image, so each row fits as many as its width allows. The timeline labels each row with its newest date
 - Images supported: `png`, `jpg`, `webp`, `avif`, `gif` and `heic` all work 
 - Server lists the folder on each request via `/api/art`, and serves the files from `/content/...`.
