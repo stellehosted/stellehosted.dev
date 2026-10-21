@@ -72,10 +72,10 @@
 svg.dock-rims {
   pointer-events: none; mix-blend-mode: overlay;
 }
-/* Hitboxes are invisible rects drawn before their icon; fx.css makes the icons themselves
+/* Hitboxes are invisible rects drawn before their icon; glowFx.css makes the icons themselves
    pointer-transparent so hovering the icon still counts as hovering the hitbox. */
 .dock-wrap svg .hitbox { fill: transparent; cursor: pointer; }
-/* Hover scale + glow comes from the shared fx.css (.fx-hit / .fx classes in dock.svg). */
+/* Hover scale + glow comes from the shared glowFx.css (.glow-fx-hit / .glow-fx classes in dock.svg). */
 
 /* ===== mobile (Sketch "Dock (Mobile)", 1080x1920 canvas) =====
    Applies to every page in portrait: the dock is self-contained, so no page opts in. --u becomes

@@ -126,7 +126,7 @@
     gap: calc(2.5 * var(--u));
     padding: 0.833rem 1.667rem;
   }
-  /* The link is the hitbox (.fx-hit, see fx.css); its contents (.fx) scale and glow on hover.
+  /* The link is the hitbox (.glow-fx-hit, see glowFx.css); its contents (.glow-fx) scale and glow on hover.
      The ::before pads the hit area a little beyond the avatar + text (0.5 tall, 0.75 wide)
      and stays well inside the 2.5 gap, so neighbours never overlap or touch. It's out of
      flow, so layout is unchanged. */
@@ -143,7 +143,7 @@
     inset: calc(-0.5 * var(--u)) calc(-0.75 * var(--u));
     border-radius: calc(0.833 * var(--u));
   }
-  .social-item .fx { display: flex; align-items: center; gap: calc(0.417 * var(--u)); }
+  .social-item .glow-fx { display: flex; align-items: center; gap: calc(0.417 * var(--u)); }
   .social-item .avatar {
     width: calc(1.5625 * var(--u)); height: calc(1.5625 * var(--u));
     border-radius: 50%;
@@ -262,14 +262,14 @@
   <p class="hero-tagline">A computer person &amp; an arts person smashed into one</p>
 
   <div class="socials glass-secondary">
-    <a class="social-item fx-hit" href="https://www.instagram.com/stellehosted/">
-      <span class="fx"><span class="avatar" style="background-image:url('branding/Personal.png')"></span>@stellehosted</span>
+    <a class="social-item glow-fx-hit" href="https://www.instagram.com/stellehosted/">
+      <span class="glow-fx"><span class="avatar" style="background-image:url('branding/Personal.png')"></span>@stellehosted</span>
     </a>
-    <a class="social-item fx-hit" href="https://www.instagram.com/artgazestelle/">
-      <span class="fx"><span class="avatar" style="background-image:url('branding/Sakura.png')"></span>@artgazestelle</span>
+    <a class="social-item glow-fx-hit" href="https://www.instagram.com/artgazestelle/">
+      <span class="glow-fx"><span class="avatar" style="background-image:url('branding/Sakura.png')"></span>@artgazestelle</span>
     </a>
-    <a class="social-item fx-hit" href="https://www.instagram.com/stevesun28/">
-      <span class="fx"><span class="avatar" style="background-image:url('branding/School.png')"></span>@stevesun28</span>
+    <a class="social-item glow-fx-hit" href="https://www.instagram.com/stevesun28/">
+      <span class="glow-fx"><span class="avatar" style="background-image:url('branding/School.png')"></span>@stevesun28</span>
     </a>
   </div>
 
@@ -291,7 +291,7 @@
 </div>
 
 <script src="/lib/glass.js"></script>
-<script src="/lib/fx.js" data-fx></script>
+<script src="/lib/glowFx.js" data-glow-fx></script>
 <script src="/lib/dock.js"></script>
 <script src="nowplaying.js"></script>
 </body>

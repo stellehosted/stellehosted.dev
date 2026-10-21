@@ -1,0 +1,35 @@
+/* ===== hover effect (scale + white glow), shared: see glowFx.js =====
+   Two roles:
+     .glow-fx-hit  the hitbox. Whatever should react to the pointer. It is NOT what moves, so the
+              target area never shrinks or jitters while the effect plays.
+     .glow-fx      the thing that scales and glows when its .glow-fx-hit is hovered.
+   In HTML the .glow-fx is a descendant of the hitbox (<a class="glow-fx-hit"><span class="glow-fx">..</span></a>).
+   In SVG it follows the hitbox as a sibling (<rect class="glow-fx-hit"/><g class="glow-fx">..</g>, or a group
+   that contains the .glow-fx). --glow-fx-scale overrides the 1.12 default. */
+.glow-fx {
+  transition: transform 0.15s ease, filter 0.15s ease;
+  /* The .glow-fx paints on top of its hitbox, so it must be pointer-transparent: otherwise hovering
+     the icon/text itself drops :hover on the hitbox (and the click and cursor with it). */
+  pointer-events: none;
+}
+svg .glow-fx {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+/* HTML needs a box that transforms: a bare inline span ignores scale(). */
+:where(.glow-fx:not(svg .glow-fx)) { display: inline-block; }   /* :where() so a page can still set display:flex on its own .glow-fx */
+
+/* HTML: the .glow-fx is inside its hitbox. */
+.glow-fx-hit:hover .glow-fx {
+  transform: scale(var(--glow-fx-scale, 1.12));
+  filter: drop-shadow(0 0 0.75rem rgba(255,255,255,0.5));
+}
+/* SVG: the .glow-fx (or a group containing it) is the hitbox's next sibling. These sibling selectors
+   must stay scoped to svg: for HTML, `+ *` would match the NEXT hitbox in a row and light it up
+   too. Safari ignores CSS filter functions (drop-shadow) on SVG elements but honors url()
+   filters; #glow-fx is the same glow, injected by glowFx.js. */
+svg .glow-fx-hit:hover + .glow-fx,
+svg .glow-fx-hit:hover + * .glow-fx {
+  transform: scale(var(--glow-fx-scale, 1.12));
+  filter: url(#glow-fx);
+}

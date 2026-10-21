@@ -43,6 +43,19 @@ The Sketch "Glass" and "Glass (Secondary)" styles: frosted fill, 16px background
 - `glass.js` adds and sizes the rim for you (nothing to write in the markup). For glass added later, call `glassRims()`
 - Keep the rim's container free of `transform` / `z-index` / `position: fixed`, or the overlay blend can't see the page behind it
 
+### glowFx (`lib/glowFx.css`, `lib/glowFx.js`)
+The hover effect for icons and text: scale up 12% with a soft white glow. The dock uses it, as do the socials on `home.html` and the OC names on `/art`
+- Add `<script src="/lib/glowFx.js"></script>` at the end of `<body>` (it loads `glowFx.css` itself; `dock.js` includes it too, so it's safe twice)
+- Put `class="glow-fx-hit"` on whatever should react to the pointer and `class="glow-fx"` on the thing inside it that scales and glows (in SVG, the `.glow-fx` follows its hitbox as a sibling). Optional: `--glow-fx-scale`
+- The hitbox itself never moves, so the hover area doesn't shrink while it animates
+
+### cardFx (`lib/cardFx.css`)
+A white glow that fades in along a card's inside edge on hover or keyboard focus. CSS only, and it doesn't touch the card's own blur
+- Add `<link rel="stylesheet" href="/lib/cardFx.css">` to `<head>`
+- Put `class="card-fx"` on the card and `class="card-fx-hit"` on whatever should react to the pointer (the card itself, or a wrapper around it)
+- Optional: `--card-fx-color`, `--card-fx-size` (default `2.5rem`), `--card-fx-time`
+- It uses the card's `::after`, so the card shouldn't have its own
+
 ### Fonts (`lib/font.css`, `lib/font/`)
 - Add `<link rel="stylesheet" href="/lib/font.css">` to a page's `<head>`
 - Use `font-family: 'FuturaNowHeadline'` with the `font-weight` / `font-style` you want

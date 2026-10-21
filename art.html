@@ -10,6 +10,7 @@
 <link rel="stylesheet" href="/lib/font.css">
 <link rel="stylesheet" href="/lib/sidebar.css">
 <link rel="stylesheet" href="/lib/glass.css">
+<link rel="stylesheet" href="/lib/cardFx.css">
 <style>
   /* Same unit system as home.html: 1rem == 1 real Sketch unit on the 1920x1080 canvas, so every measurement below is the Sketch ("Art" frame) value / 19.2. Asset URLs are absolute because this page is served at /art (and /art/). */
   /* The document itself scrolls (no inner scroll box): a position:fixed scroller would be an
@@ -86,7 +87,12 @@
     clip-path: polygon(0 100%, 0 44.78%, 99.83% 0, 100% 100%);
   }
   .card-name {
-    position: absolute; right: 2.5rem; bottom: 1.667rem;
+    /* The padding gives the 4px outside stroke (and the hover glow, a filter) room inside the element's
+       box: a filter clips to the box, and the stroke sticks out past a bare line box. The offsets
+       are the original right/bottom (2.5rem, 1.667rem) minus the padding, so the text doesn't move. */
+    --pad: 0.833rem;
+    position: absolute; right: calc(2.5rem - var(--pad)); bottom: calc(1.667rem - var(--pad));
+    padding: var(--pad);
     font-size: 2.0833rem; font-weight: 700; line-height: 1.1;
     color: #fff;
     /* 4px outside stroke: a centered stroke of 8px painted *under* the fill */
@@ -140,7 +146,7 @@
 
   /* Art card: Glass (Secondary), radius 16. Photo 447 tall; the card's width is set inline from the
      file's size (see renderCard), so the box is the right shape before its image has loaded. Then
-     the title and date. Behind the photo sits a 25.6px-blurred copy of it, which bleeds the art's
+     the title and date. Behind the photo sits a 16px-blurred copy of it, scaled 1.05x, which bleeds the art's
      colors down into the frosted area under it. */
   .art-hit .art-fx { display: block; position: relative; width: 16.667rem; }   /* 320 when the size is unknown */
   .art-card {
@@ -149,7 +155,6 @@
     display: flex; flex-direction: column; gap: 0.833rem;
     padding-bottom: 0.833rem;
     overflow: hidden;
-    transition: box-shadow 0.15s ease;
   }
   .art-photo {
     position: relative;
@@ -162,7 +167,8 @@
     position: absolute; left: 0; top: 0;
     width: 100%; height: 23.281rem;
     object-fit: cover;
-    filter: blur(1.333rem);
+    filter: blur(0.833rem);   /* 16px */
+    transform: scale(1.05);   /* a little bigger than the photo, so more of the color bleeds out */
   }
   .art-info {
     position: relative;
@@ -175,19 +181,8 @@
   /* Off-screen images have their src removed (see the observer in the script): no alt-text flash. */
   img:not([src]) { visibility: hidden; }
 
-  /* Hover glow (fx.css): .art-hit is the hitbox and stays put, the art inside it (.fx) scales and
-     glows. The button is a sibling of the art, not inside it, so it keeps its clicks (.fx is
-     pointer-transparent). A gentler scale than the default: the art is big, and the OC cards would
-     otherwise overlap their neighbors. On a glass art card the glow is a box-shadow instead of
-     fx's drop-shadow filter: a filter would cut the card's background blur off from the page. */
-  .art-hit { position: relative; --fx-scale: 1.04; }
-  .art-hit.fx-hit:hover .art-fx { filter: none; }
-  .art-hit.fx-hit:hover .art-card {
-    box-shadow:
-      0 0 0.417rem rgba(255,255,255,0.9),
-      0 0 2.5rem rgba(255,255,255,0.12),
-      inset 0 0 1.25rem rgba(255,255,255,0.32);
-  }
+  /* Hover: cardFx (lib/cardFx.css) (.art-hit is the hitbox, the cards are .card-fx). */
+  .art-hit { position: relative; }
   /* Every card opens the viewer: an invisible button covers it. */
   .art-open {
     position: absolute; inset: 0; width: 100%; height: 100%;
@@ -335,16 +330,15 @@
   };
   const empty = (parent) => parent.appendChild(el('p', 'empty', 'Nothing here yet.'));
 
-  // Wraps a card's art in its hover hitbox (see fx.css): the art gets a "3 images" pill when
-  // the entry is a carousel, and the invisible button over it opens the viewer. Returns the hitbox.
+  // Wraps a card's art in its hover hitbox: the art gets a "3 images" pill when the entry is a
+  // carousel, and the invisible button over it opens the viewer. Returns the hitbox.
   function hitbox(art, entry) {
-    art.classList.add('fx');
     if (entry.images.length > 1) art.append(el('span', 'multi-badge', `${entry.images.length} images`));
     const button = el('button', 'art-open');
     button.type = 'button';
     button.setAttribute('aria-label', `View ${entry.title}`);
     button.addEventListener('click', () => openViewer(entry));
-    const wrap = el('div', 'art-hit fx-hit');
+    const wrap = el('div', 'art-hit card-fx-hit');
     wrap.append(art, button);
     return wrap;
   }
@@ -414,14 +408,14 @@
     const list = document.getElementById('ocs-list');
     if (!ocs.length) return empty(list);
     for (const oc of ocs) {
-      const card = el('article', 'card');
+      const card = el('article', 'card card-fx');
       if (oc.from && oc.to) {
         card.style.setProperty('--from', oc.from);
         card.style.setProperty('--to', oc.to);
       }
-      card.append(img(oc.images[0].src, oc.name), el('div', 'card-band'), el('div', 'card-name', oc.name));
+      card.append(img(oc.images[0].src, oc.name), el('div', 'card-band'), el('div', 'card-name glow-fx', oc.name));
       const hit = hitbox(card, { title: oc.name, description: oc.description, images: oc.images });
-      hit.classList.add('card-hit');
+      hit.classList.add('card-hit', 'glow-fx-hit');   // the name scales + glows on hover (glowFx.css)
       list.appendChild(hit);
       lazy.observe(card);
     }
@@ -433,7 +427,7 @@
     return `${+m}/${+d}/${y.slice(2)}`;
   };
 
-  // One art card: blurred copy, photo, title + date (see .art-card). The .art-fx box is what scales
+  // One art card: blurred copy, photo, title + date (see .art-card). The .art-fx box sizes the card
   // on hover; the glass rim (glass.js) goes inside it, next to the card, so it scales along.
   function renderCard(piece) {
     const cover = piece.images[0];
@@ -445,7 +439,7 @@
     date.dateTime = piece.date;
     const info = el('div', 'art-info');
     info.append(el('h3', 'art-title', piece.title), date);
-    const card = el('article', 'art-card glass-secondary');
+    const card = el('article', 'art-card glass-secondary card-fx');
     card.append(blurred, photo, info);
     lazy.observe(card);
     const box = el('div', 'art-fx');
