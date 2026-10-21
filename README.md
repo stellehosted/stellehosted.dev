@@ -36,6 +36,13 @@ Sidebars used across portfolio pages
 - Add `<link rel="stylesheet" href="/lib/sidebar.css">` to `<head>`, put a `<nav class="sidebar">` after the page content (the markup and classes are documented at the top of `sidebar.css`: `.sidebar-title`, `.sidebar-heading`, `.sidebar-group`, `.sidebar-list` / `.sidebar-text`), and add `<script src="/lib/sidebar.js"></script>` at the end of `<body>
 - `sidebar.css` also defines `.glow-text`, the gradient-glow heading style, which pages can use for their own headings
 
+### Glass (`lib/glass.css`, `lib/glass.js`)
+The Sketch "Glass" and "Glass (Secondary)" styles: frosted fill, 16px background blur, outer + inner glow, and the overlay-blended gradient rim
+- Add `<link rel="stylesheet" href="/lib/glass.css">` to `<head>` and `<script src="/lib/glass.js"></script>` at the end of `<body>`
+- Put `class="glass"` or `class="glass-secondary"` on any element and give it its own `position` and size. Optional: `--glass-radius` (in `--u` units, default 1.25), `--s` (scale, e.g. on mobile), `--rim-stroke` (canvas px, default 2)
+- `glass.js` adds and sizes the rim for you (nothing to write in the markup). For glass added later, call `glassRims()`
+- Keep the rim's container free of `transform` / `z-index` / `position: fixed`, or the overlay blend can't see the page behind it
+
 ### Fonts (`lib/font.css`, `lib/font/`)
 - Add `<link rel="stylesheet" href="/lib/font.css">` to a page's `<head>`
 - Use `font-family: 'FuturaNowHeadline'` with the `font-weight` / `font-style` you want

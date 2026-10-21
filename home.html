@@ -7,6 +7,7 @@
 <link rel="icon" href="/branding/favicon.png" type="image/png" sizes="256x256">
 <link rel="apple-touch-icon" href="/branding/apple-touch-icon.png">
 <link rel="stylesheet" href="/lib/font.css">
+<link rel="stylesheet" href="/lib/glass.css">
 <style>
   /* Unit system: 1rem == 1 real Sketch unit on the 1920x1080 canvas. html font-size is set so 100rem == canvas width and 56.25rem == canvas height, whichever is the limiting dimension of the viewport (a "contain" fit, centered, matching Sketch's 1920x1080 artboard exactly). Every measurement below is simply the Sketch value divided by 19.2 (px / 1920 * 100). */
   html {
@@ -78,36 +79,11 @@
   .path-band { --r: 1.667rem; height: 33.854rem; }
   .path-band .tint { background: linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 100%); }
 
-  /* Reusable "Glass (Secondary)" surface: frosted fill + outside gradient rim light.
-     Component units: every length inside a glass component is a multiple of --u, which is 1rem
-     times the component's --s (scale). On mobile the Sketch pills are the desktop pills scaled up
-     (Socials 1.18556x, Now Playing 1.60530x: blur, shadows, radius, gaps and type alike), so a
-     layout only sets --s plus the box's position. --s inherits, so the album art nested in the
-     Now Playing pill scales with it. */
-  .glass-secondary {
-    --u: calc(var(--s, 1) * 1rem);
-    --glass-radius: 1.25;
-    position: absolute;
-    border-radius: calc(var(--glass-radius) * var(--u));
-    background: rgba(128,128,128,0.2);
-    backdrop-filter: blur(calc(0.672 * var(--u)));
-    -webkit-backdrop-filter: blur(calc(0.672 * var(--u)));
-    box-shadow:
-      0 0 calc(2.5 * var(--u)) rgba(255,255,255,0.12),
-      inset 0 0 calc(1.25 * var(--u)) rgba(255,255,255,0.32);
-  }
-  /* Glass Outline. Each rim is a sibling svg placed after its surface (a backdrop-filter element
-     is an isolated group, so a rim nested inside would blend only against the pill's own fill).
-     Being a sibling, it can't size itself from its surface: the script at the end of <body> keeps
-     its box, viewBox, corner radius and stroke matched to the element named in data-for.
-     --rim-stroke is the stroke width in canvas px. */
-  .glass-rim {
-    --rim-stroke: 2;
-    position: absolute;
-    left: 0; top: 0; width: 0; height: 0;
-    pointer-events: none;
-    mix-blend-mode: overlay;
-  }
+  /* Glass surfaces (.glass-secondary) and their rims come from lib/glass.css + glass.js. Component
+     units: every length inside a glass component is a multiple of --u (1rem times --s). On mobile
+     the Sketch pills are the desktop pills scaled up (Socials 1.18556x, Now Playing 1.60530x: blur,
+     shadows, radius, gaps and type alike), so a layout only sets --s plus the box's position. */
+  .socials, .nowplaying { position: absolute; }
 
   /* Logo */
   .hero-logo {
@@ -197,7 +173,7 @@
   .album-art-clip img { height: 100%; width: auto; max-width: calc(13.333 * var(--u)); object-fit: cover; display: block; }
   .np-info { margin-left: calc(1.667 * var(--u)); min-width: 0; }
   /* Empty state (nothing played yet): drop the album art and its rim; text takes the art's place. */
-  .no-art .album-art, .no-art ~ .rim-album { display: none; }
+  .no-art .album-art { display: none; }   /* glass.js hides its rim when the surface has no box */
   .no-art .np-info { margin-left: calc(3.333 * var(--u)); }
   .np-title-row { display: flex; align-items: center; gap: calc(0.625 * var(--u)); min-width: 0; }
 
@@ -257,7 +233,7 @@
       top: 67.141rem;
       max-width: 52.083rem;
     }
-    .rim-album { --rim-stroke: 3.212; }                     /* Sketch scales the art's border here */
+    .album-art { --rim-stroke: 3.212; }                     /* Sketch scales the art's border here */
   }
 
 </style>
@@ -296,14 +272,6 @@
       <span class="fx"><span class="avatar" style="background-image:url('branding/School.png')"></span>@stevesun28</span>
     </a>
   </div>
-  <svg class="glass-rim rim-socials" data-for=".socials" viewBox="0 0 633 62" preserveAspectRatio="none">
-    <defs><linearGradient id="rimGradSocials" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#fff"></stop>
-      <stop offset="50%" stop-color="#fff" stop-opacity="0"></stop>
-      <stop offset="100%" stop-color="#fff"></stop>
-    </linearGradient></defs>
-    <rect x="1" y="1" width="631" height="60" rx="31" fill="none" stroke="url(#rimGradSocials)" stroke-width="2"></rect>
-  </svg>
 
   <div class="nowplaying glass-secondary no-art" id="np-pill">
     <div class="album-art glass-secondary">
@@ -319,66 +287,10 @@
       <div class="np-meta" id="np-meta"></div>
     </div>
   </div>
-  <svg class="glass-rim rim-nowplaying" data-for="#np-pill" viewBox="0 0 467 128" preserveAspectRatio="none">
-    <defs><linearGradient id="rimGradNP" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#fff"></stop>
-      <stop offset="50%" stop-color="#fff" stop-opacity="0"></stop>
-      <stop offset="100%" stop-color="#fff"></stop>
-    </linearGradient></defs>
-    <rect x="1" y="1" width="465" height="126" rx="23" fill="none" stroke="url(#rimGradNP)" stroke-width="2"></rect>
-  </svg>
-  <svg class="glass-rim rim-album" data-for="#np-pill .album-art" viewBox="0 0 128 128" preserveAspectRatio="none">
-    <defs><linearGradient id="rimGradAlbum" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#fff"></stop>
-      <stop offset="50%" stop-color="#fff" stop-opacity="0"></stop>
-      <stop offset="100%" stop-color="#fff"></stop>
-    </linearGradient></defs>
-    <rect x="1" y="1" width="126" height="126" rx="23" fill="none" stroke="url(#rimGradAlbum)" stroke-width="2"></rect>
-  </svg>
 
 </div>
 
-<script>
-// Glass rims (see .glass-rim): keep each rim's box over the element named in its data-for, and
-// rebuild its viewBox from that element's actual aspect ratio, so the rounded rect is never
-// stretched. The viewBox height stays at its design value (62 or 128 units); the corner radius
-// comes from the surface's own computed border-radius and the stroke from --rim-stroke (canvas px).
-// Runs whenever any surface resizes: text changes, the art loading, a viewport resize, or the
-// switch between the desktop and mobile canvas.
-(() => {
-  const rims = [...document.querySelectorAll('.glass-rim[data-for]')];
-  const pairs = rims.map((rim) => ({ rim, rect: rim.querySelector('rect'), target: document.querySelector(rim.dataset.for) }));
-
-  const sync = () => {
-    const rem = parseFloat(getComputedStyle(document.documentElement).fontSize);
-    for (const { rim, rect, target } of pairs) {
-      const t = target.getBoundingClientRect();
-      if (!t.width || !t.height) continue;   // hidden surface (e.g. no album art): its rim is hidden too
-      const p = rim.parentElement.getBoundingClientRect();
-      rim.style.left = `${(t.left - p.left) / rem}rem`;
-      rim.style.top = `${(t.top - p.top) / rem}rem`;
-      rim.style.width = `${t.width / rem}rem`;
-      rim.style.height = `${t.height / rem}rem`;
-
-      const h = rim.viewBox.baseVal.height;
-      const w = h * t.width / t.height;
-      const unitsPerPx = h / t.height;
-      const stroke = parseFloat(getComputedStyle(rim).getPropertyValue('--rim-stroke')) * (rem / 19.2) * unitsPerPx;
-      const radius = Math.min(parseFloat(getComputedStyle(target).borderTopLeftRadius) * unitsPerPx, h / 2);
-      rim.setAttribute('viewBox', `0 0 ${w} ${h}`);
-      rect.setAttribute('x', stroke / 2);
-      rect.setAttribute('y', stroke / 2);
-      rect.setAttribute('width', w - stroke);
-      rect.setAttribute('height', h - stroke);
-      rect.setAttribute('rx', Math.max(radius - stroke / 2, 0));
-      rect.setAttribute('stroke-width', stroke);
-    }
-  };
-
-  const ro = new ResizeObserver(sync);
-  pairs.forEach(({ target }) => ro.observe(target));
-})();
-</script>
+<script src="/lib/glass.js"></script>
 <script src="/lib/fx.js" data-fx></script>
 <script src="/lib/dock.js"></script>
 <script src="nowplaying.js"></script>

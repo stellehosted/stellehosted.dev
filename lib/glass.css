@@ -1,0 +1,41 @@
+/* ===== glass surfaces (shared: see glass.js) =====
+   The Sketch shared styles "Glass" and "Glass (Secondary)" as classes:
+     .glass            white 20% fill
+     .glass-secondary  gray 20% fill, half-strength glows
+   Both: 16px background blur, a soft outer glow, an inner glow, and (added by glass.js) a 2px
+   gradient rim in overlay blend. Put the class on any element; give it its own position and size
+   (corner radius is --glass-radius, in --u units, default 1.25). Use <link rel="stylesheet" href="/lib/glass.css"> in <head> and
+   <script src="/lib/glass.js"></script> at the end of <body>.
+   Every length is a multiple of --u, which is 1rem times --s (scale, default 1; it inherits, so
+   a nested glass element scales with its parent). Sketch scales the pills on mobile but not the
+   rim, so the rim stays 2 canvas px (see --rim-stroke). */
+.glass, .glass-secondary {
+  --u: calc(var(--s, 1) * 1rem);
+  --glass-fill: rgba(255,255,255,0.2);
+  --glass-glow: 0.24;    /* outer glow alpha */
+  --glass-inner: 0.64;   /* inner glow alpha */
+  border-radius: calc(var(--glass-radius, 1.25) * var(--u));   /* override --glass-radius per element */
+  background: var(--glass-fill);
+  backdrop-filter: blur(calc(0.833 * var(--u)));
+  -webkit-backdrop-filter: blur(calc(0.833 * var(--u)));
+  box-shadow:
+    0 0 calc(2.5 * var(--u)) rgba(255,255,255,var(--glass-glow)),
+    inset 0 0 calc(1.25 * var(--u)) rgba(255,255,255,var(--glass-inner));
+}
+.glass-secondary {
+  --glass-fill: rgba(128,128,128,0.2);
+  --glass-glow: 0.12;
+  --glass-inner: 0.32;
+}
+
+/* Rim light. Each rim is a sibling svg placed after its surface, because a backdrop-filter
+   element is an isolated group and a rim nested inside would blend only against the pill's own
+   fill. glass.js sizes and positions it over the surface. Keep the rim's container free of
+   transform / z-index / position:fixed, or the overlay blend stops seeing the page behind. */
+/* The rim's stroke is read from its surface: set --rim-stroke (canvas px, default 2) on the .glass element. */
+.glass-rim {
+  position: absolute;
+  left: 0; top: 0; width: 0; height: 0;
+  pointer-events: none;
+  mix-blend-mode: overlay;
+}
