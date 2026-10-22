@@ -1,7 +1,7 @@
 /Working
 /content
-/.env
 
+.env
 .claude
 .DS_Store
 .vscode

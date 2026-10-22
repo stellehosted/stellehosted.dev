@@ -77,15 +77,27 @@
     position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
     filter: drop-shadow(-1.042rem -0.417rem 0 var(--from, transparent));
   }
-  /* "Name BG": 137px frosted band, slanted top edge (points from the Sketch shape) */
+  /* "Name BG": 137px frosted band, slanted top edge (points from the Sketch shape). It's a blurred
+     copy of the card's own art, not a backdrop-filter: Safari renders a backdrop blur in tiles and
+     sometimes leaves some of them stale after the image loads, so the band looked progressively less
+     blurred toward the bottom until something repainted it. The copy is clipped to the same shape,
+     and scaled a little so the blur's own faded edge falls outside the card (overflow: hidden). */
   .card-band {
-    position: absolute; left: 0; right: 0; bottom: 0;
-    height: 7.167rem;
-    background: rgba(255,255,255,0.05);
-    backdrop-filter: blur(0.833rem);
-    -webkit-backdrop-filter: blur(0.833rem);
-    clip-path: polygon(0 100%, 0 44.78%, 99.83% 0, 100% 100%);
+    position: absolute; inset: 0;
+    clip-path: polygon(0 100%, 0 calc(100% - 3.958rem), 99.83% calc(100% - 7.167rem), 100% 100%);
   }
+  .card-band::after {   /* the band's white 5% tint, over the blurred copy */
+    content: ""; position: absolute; inset: 0;
+    background: rgba(255,255,255,0.05);
+  }
+  .band-blur {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    object-fit: cover;
+    filter: blur(0.833rem);
+    transform: scale(1.06);
+    will-change: filter, transform;
+  }
+  .band-blur:not(.loaded) { filter: none; }   /* same reasoning as .art-blur: blur the loaded picture */
   .card-name {
     /* The padding gives the 4px outside stroke (and the hover glow, a filter) room inside the element's
        box: a filter clips to the box, and the stroke sticks out past a bare line box. The offsets
@@ -169,7 +181,12 @@
     object-fit: cover;
     filter: blur(0.833rem);   /* 16px */
     transform: scale(1.05);   /* a little bigger than the photo, so more of the color bleeds out */
+    will-change: filter, transform;   /* its own layer, so Safari rasterizes the blur once, at full size */
   }
+  /* Safari sometimes keeps the blur it computed for the empty image (before the file arrived) and
+     draws the loaded picture scaled but with hard, un-faded edges until something repaints it. So the
+     filter is only switched on once the image has loaded (the script adds .loaded). */
+  .art-blur:not(.loaded) { filter: none; }
   .art-info {
     position: relative;
     display: flex; flex-direction: column; gap: 0.417rem;
@@ -318,7 +335,7 @@
     for (const { target, isIntersecting } of entries) {
       for (const image of target.querySelectorAll('img[data-src]')) {
         if (isIntersecting) image.src = image.dataset.src;
-        else image.removeAttribute('src');
+        else { image.removeAttribute('src'); image.classList.remove('loaded'); }
       }
     }
   }, { rootMargin: '100% 0px' });
@@ -326,6 +343,7 @@
     const node = el('img');
     node.dataset.src = src; node.alt = alt;
     node.decoding = 'async';
+    node.addEventListener('load', () => node.classList.add('loaded'));
     return node;
   };
   const empty = (parent) => parent.appendChild(el('p', 'empty', 'Nothing here yet.'));
@@ -413,7 +431,11 @@
         card.style.setProperty('--from', oc.from);
         card.style.setProperty('--to', oc.to);
       }
-      card.append(img(oc.images[0].src, oc.name), el('div', 'card-band'), el('div', 'card-name glow-fx', oc.name));
+      const band = el('div', 'card-band');
+      const bandBlur = img(oc.images[0].src, '');
+      bandBlur.className = 'band-blur';
+      band.appendChild(bandBlur);
+      card.append(img(oc.images[0].src, oc.name), band, el('div', 'card-name glow-fx', oc.name));
       const hit = hitbox(card, { title: oc.name, description: oc.description, images: oc.images });
       hit.classList.add('card-hit', 'glow-fx-hit');   // the name scales + glows on hover (glowFx.css)
       list.appendChild(hit);

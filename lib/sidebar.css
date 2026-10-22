@@ -135,8 +135,8 @@
 .sidebar-bg .blur { position: absolute; top: 0; bottom: 0; right: 0; width: 20rem; overflow: hidden; }
 .sidebar-bg .layer {
   position: absolute; inset: 0;
-  backdrop-filter: blur(calc(var(--r) * var(--i) / 6));
-  -webkit-backdrop-filter: blur(calc(var(--r) * var(--i) / 6));
-  -webkit-mask-image: linear-gradient(to left, transparent calc((var(--i) - 1) * 100% / 6), #000 calc(var(--i) * 100% / 6), transparent calc((var(--i) + 1) * 100% / 6));
-  mask-image: linear-gradient(to left, transparent calc((var(--i) - 1) * 100% / 6), #000 calc(var(--i) * 100% / 6), transparent calc((var(--i) + 1) * 100% / 6));
+  backdrop-filter: blur(calc(var(--r) * sqrt(2 * var(--i) - 1) / 6));
+  -webkit-backdrop-filter: blur(calc(var(--r) * sqrt(2 * var(--i) - 1) / 6));
+  -webkit-mask-image: linear-gradient(to left, transparent calc((var(--i) - 1) * 100% / 6), #000 calc(var(--i) * 100% / 6));
+  mask-image: linear-gradient(to left, transparent calc((var(--i) - 1) * 100% / 6), #000 calc(var(--i) * 100% / 6));
 }

@@ -69,10 +69,10 @@
   }
   .blur-band .layer, .blur-band .tint { position: absolute; inset: 0; }
   .blur-band .layer {
-    backdrop-filter: blur(calc(var(--r) * var(--i) / 6));
-    -webkit-backdrop-filter: blur(calc(var(--r) * var(--i) / 6));
-    -webkit-mask-image: linear-gradient(to bottom, transparent calc((var(--i) - 1) * 100% / 6), #000 calc(var(--i) * 100% / 6), transparent calc((var(--i) + 1) * 100% / 6));
-    mask-image: linear-gradient(to bottom, transparent calc((var(--i) - 1) * 100% / 6), #000 calc(var(--i) * 100% / 6), transparent calc((var(--i) + 1) * 100% / 6));
+    backdrop-filter: blur(calc(var(--r) * sqrt(2 * var(--i) - 1) / 6));
+    -webkit-backdrop-filter: blur(calc(var(--r) * sqrt(2 * var(--i) - 1) / 6));
+    -webkit-mask-image: linear-gradient(to bottom, transparent calc((var(--i) - 1) * 100% / 6), #000 calc(var(--i) * 100% / 6));
+    mask-image: linear-gradient(to bottom, transparent calc((var(--i) - 1) * 100% / 6), #000 calc(var(--i) * 100% / 6));
   }
 
   /* Background Blur: 650px band, progressive Background blur 0->32px, gradient wash 0%->100% black */
@@ -165,7 +165,7 @@
   /* Art is a fixed height; its width follows the image's aspect ratio (capped so odd/wide covers
      get cropped rather than swallowing the pill). */
   .album-art {
-    position: relative; display: flex;
+    position: relative; display: flex; border-radius: calc(1.25 * var(--u));
     height: calc(6.667 * var(--u)); max-width: calc(13.333 * var(--u));
     flex-shrink: 0;
   }
@@ -173,16 +173,19 @@
   .album-art-clip img { height: 100%; width: auto; max-width: calc(13.333 * var(--u)); object-fit: cover; display: block; }
   /* Album art backdrop (Sketch "album (blur)"): the cover, 192px square starting 32px above/left of
      the pill, with a 32px gaussian blur, so it fades out to the right. The wrapper clips it to the
-     pill's corners; z-index -1 keeps it above the glass fill but below the art and text. */
-  .np-blur { position: absolute; inset: 0; z-index: -1; border-radius: inherit; overflow: hidden; pointer-events: none; }
+     pill's corners. It sits at z-index 0 with the art and text explicitly above it (a negative
+     z-index was suspected of making Safari sometimes paint the text over the blur with a backdrop of
+     its own); translateZ(0) gives the filtered image its own compositing layer. */
+  .np-blur { position: absolute; inset: 0; z-index: 0; border-radius: inherit; overflow: hidden; pointer-events: none; transform: translateZ(0); }
+  .album-art, .np-info { z-index: 1; }
   .np-blur img {
     position: absolute; left: calc(-1.667 * var(--u)); top: calc(-1.667 * var(--u));
     width: calc(10 * var(--u)); height: calc(10 * var(--u)); object-fit: cover;
     filter: blur(calc(1.667 * var(--u)));
   }
-  .np-info { margin-left: calc(1.667 * var(--u)); min-width: 0; }
+  .np-info { position: relative; margin-left: calc(1.667 * var(--u)); min-width: 0; }
   /* Empty state (nothing played yet): drop the album art and its rim; text takes the art's place. */
-  .no-art .album-art, .no-art .np-blur { display: none; }   /* glass.js hides its rim when the surface has no box */
+  .no-art .album-art, .no-art .np-blur { display: none; }
   .no-art .np-info { margin-left: calc(3.333 * var(--u)); }
   .np-title-row { display: flex; align-items: center; gap: calc(0.625 * var(--u)); min-width: 0; }
 
@@ -242,7 +245,6 @@
       top: 67.141rem;
       max-width: 52.083rem;
     }
-    .album-art { --rim-stroke: 3.212; }                     /* Sketch scales the art's border here */
   }
 
 </style>
@@ -284,7 +286,7 @@
 
   <div class="nowplaying glass-secondary no-art" id="np-pill">
     <div class="np-blur" aria-hidden="true"><img id="np-cover-blur" alt=""></div>
-    <div class="album-art glass-secondary">
+    <div class="album-art">
       <div class="album-art-clip"><img id="np-cover" src="album.jpg" alt="Album cover"></div>
     </div>
     <div class="np-info">
