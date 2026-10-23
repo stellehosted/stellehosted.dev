@@ -67,5 +67,5 @@ content/art/
     description.md          (optional) description
 ```
 
-- Formats supported: `png`, `jpg`, `webp`, `avif`, `gif` and `heic` 
+- **Image Formats:** `png`, `jpg`, `webp`, `avif`, `gif` and `heic` 
 - Server lists the folder on each request via `/api/art`, and serves the files from `/content/...`.

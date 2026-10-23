@@ -1,10 +1,5 @@
 // Static file server for stellehosted.dev + a small Navidrome now-playing proxy.
 
-// Why a proxy at all: Subsonic (Navidrome's API) auth requires a password-derived token on every request. That can never be sent to the browser, so this server holds the credentials, calls Navidrome over localhost, and hands the page back only the sanitized track info (and a re-proxied cover art image).
-
-// Run with env vars set, e.g.:
-//   NAVIDROME_URL=http://127.0.0.1:4533 NAVIDROME_USER=stelle NAVIDROME_PASSWORD=... node server.js
-
 // Local runs: pick up ../.env (Docker passes these through docker-compose instead; already-set vars win).
 try { process.loadEnvFile(require('path').join(__dirname, '..', '.env')); } catch {}
 
