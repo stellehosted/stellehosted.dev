@@ -54,17 +54,17 @@ docker-compose: `./content` → `/app/content`
 content/art/
   ocs/
     01 OC1.png              oc name = filename; shown in order by number
-    01 OC1.txt              (optional) description
+    01 OC1.md               (optional) description
     02 OC2.png
     colors.json             card BG gradient { "OC1": [ "#start", "#end" ] }
     
-  2026-05-07 artwork.png    one timeline stop per image: "date title"
-  2026-05-07 artwork.txt    (optional) description
-  noDate.jpg                no date in filename falls back to modification date
+  [2026-05-07] artwork.png  [date] title
+  [2026-05-07] artwork.md   (optional) description
+  noDate.jpg                no [date] in filename falls back to modification date
 
-  2024-08-02 multi-art/     multi-piece carousel
+  [2024-08-02] multi-art/   multi-piece carousel
     1.png  2.png  3.png     shown in filename order
-    description.txt         (optional) description
+    description.md          (optional) description
 ```
 
 - Formats supported: `png`, `jpg`, `webp`, `avif`, `gif` and `heic` 
