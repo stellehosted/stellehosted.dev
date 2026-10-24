@@ -1,7 +1,7 @@
 /* ===== text styles (shared) =====
    The Sketch shared text styles as classes. They are fixed: no size or glow knobs. A page that needs
    a different size (Sketch layers with a local override) sets font-size in its own CSS and says so. Use
-   <link rel="stylesheet" href="/lib/text.css"> in <head> (with font.css, which has the fonts).
+   <link rel="stylesheet" href="/lib/styles/text.css"> in <head> (with font.css, which has the fonts).
      .title       80px, weight 900: white 75% -> 100% vertical gradient fill + a 0 12 24 glow. The
                   glow is a drop-shadow filter, not text-shadow, because the fill is clipped to the
                   glyphs (a text-shadow would show through the transparent fill).

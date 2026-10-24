@@ -1,97 +1,97 @@
 /* Shared fonts: Futura Now Headline (every cut in /font), plus Avenir (below) for body text. Link this from each page instead of
-   declaring @font-face locally:  <link rel="stylesheet" href="/lib/font.css">
+   declaring @font-face locally:  <link rel="stylesheet" href="/lib/font/font.css">
    Then just use font-family: 'FuturaNowHeadline' with a font-weight (100-950) and font-style.
    Each cut maps to its CSS weight number, so the browser picks the right file by itself. Files are
    only downloaded when text on the page actually uses them. url()s resolve relative to this file. */
 
 @font-face {
   font-family: 'FuturaNowHeadline';
-  src: url('font/FuturaNowHeadlineThin.ttf') format('truetype');
+  src: url('FuturaNowHeadlineThin.ttf') format('truetype');
   font-weight: 100; font-style: normal;
 }
 @font-face {
   font-family: 'FuturaNowHeadline';
-  src: url('font/FuturaNowHeadlineThinItalic.ttf') format('truetype');
+  src: url('FuturaNowHeadlineThinItalic.ttf') format('truetype');
   font-weight: 100; font-style: italic;
 }
 @font-face {
   font-family: 'FuturaNowHeadline';
-  src: url('font/FuturaNowHeadlineExtraLight.ttf') format('truetype');
+  src: url('FuturaNowHeadlineExtraLight.ttf') format('truetype');
   font-weight: 200; font-style: normal;
 }
 @font-face {
   font-family: 'FuturaNowHeadline';
-  src: url('font/FuturaNowHeadlineExtraLightItalic.ttf') format('truetype');
+  src: url('FuturaNowHeadlineExtraLightItalic.ttf') format('truetype');
   font-weight: 200; font-style: italic;
 }
 @font-face {
   font-family: 'FuturaNowHeadline';
-  src: url('font/FuturaNowHeadlineLight.ttf') format('truetype');
+  src: url('FuturaNowHeadlineLight.ttf') format('truetype');
   font-weight: 300; font-style: normal;
 }
 @font-face {
   font-family: 'FuturaNowHeadline';
-  src: url('font/FuturaNowHeadlineLightItalic.ttf') format('truetype');
+  src: url('FuturaNowHeadlineLightItalic.ttf') format('truetype');
   font-weight: 300; font-style: italic;
 }
 @font-face {
   font-family: 'FuturaNowHeadline';
-  src: url('font/FuturaNowHeadline.ttf') format('truetype');
+  src: url('FuturaNowHeadline.ttf') format('truetype');
   font-weight: 400; font-style: normal;
 }
 @font-face {
   font-family: 'FuturaNowHeadline';
-  src: url('font/FuturaNowHeadlineItalic.ttf') format('truetype');
+  src: url('FuturaNowHeadlineItalic.ttf') format('truetype');
   font-weight: 400; font-style: italic;
 }
 @font-face {
   font-family: 'FuturaNowHeadline';
-  src: url('font/FuturaNowHeadlineMedium.ttf') format('truetype');
+  src: url('FuturaNowHeadlineMedium.ttf') format('truetype');
   font-weight: 500; font-style: normal;
 }
 @font-face {
   font-family: 'FuturaNowHeadline';
-  src: url('font/FuturaNowHeadlineMediumItalic.ttf') format('truetype');
+  src: url('FuturaNowHeadlineMediumItalic.ttf') format('truetype');
   font-weight: 500; font-style: italic;
 }
 @font-face {
   font-family: 'FuturaNowHeadline';
-  src: url('font/FuturaNowHeadlineBold.ttf') format('truetype');
+  src: url('FuturaNowHeadlineBold.ttf') format('truetype');
   font-weight: 700; font-style: normal;
 }
 @font-face {
   font-family: 'FuturaNowHeadline';
-  src: url('font/FuturaNowHeadlineBoldItalic.ttf') format('truetype');
+  src: url('FuturaNowHeadlineBoldItalic.ttf') format('truetype');
   font-weight: 700; font-style: italic;
 }
 @font-face {
   font-family: 'FuturaNowHeadline';
-  src: url('font/FuturaNowHeadlineExtraBold.ttf') format('truetype');
+  src: url('FuturaNowHeadlineExtraBold.ttf') format('truetype');
   font-weight: 800; font-style: normal;
 }
 @font-face {
   font-family: 'FuturaNowHeadline';
-  src: url('font/FuturaNowHeadlineExtraBoldItalic.ttf') format('truetype');
+  src: url('FuturaNowHeadlineExtraBoldItalic.ttf') format('truetype');
   font-weight: 800; font-style: italic;
 }
 @font-face {
   font-family: 'FuturaNowHeadline';
-  src: url('font/FuturaNowHeadlineBlack.ttf') format('truetype');
+  src: url('FuturaNowHeadlineBlack.ttf') format('truetype');
   font-weight: 900; font-style: normal;
 }
 @font-face {
   font-family: 'FuturaNowHeadline';
-  src: url('font/FuturaNowHeadlineBlackItalic.ttf') format('truetype');
+  src: url('FuturaNowHeadlineBlackItalic.ttf') format('truetype');
   font-weight: 900; font-style: italic;
 }
 @font-face {
   font-family: 'FuturaNowHeadline';
-  src: url('font/FuturaNowHeadlineExtraBlack.ttf') format('truetype');
+  src: url('FuturaNowHeadlineExtraBlack.ttf') format('truetype');
   font-weight: 950; font-style: normal;
 }
 @font-face {
   font-family: 'FuturaNowHeadline';
-  src: url('font/FuturaNowHeadlineExtraBlackItalic.ttf') format('truetype');
+  src: url('FuturaNowHeadlineExtraBlackItalic.ttf') format('truetype');
   font-weight: 950; font-style: italic;
 }
 
@@ -99,21 +99,21 @@
    split out of font/Avenir.ttc: Book is the regular, Heavy is what bold maps to. */
 @font-face {
   font-family: 'Avenir';
-  src: url('font/AvenirBook.ttf') format('truetype');
+  src: url('AvenirBook.ttf') format('truetype');
   font-weight: 400; font-style: normal;
 }
 @font-face {
   font-family: 'Avenir';
-  src: url('font/AvenirBookOblique.ttf') format('truetype');
+  src: url('AvenirBookOblique.ttf') format('truetype');
   font-weight: 400; font-style: italic;
 }
 @font-face {
   font-family: 'Avenir';
-  src: url('font/AvenirHeavy.ttf') format('truetype');
+  src: url('AvenirHeavy.ttf') format('truetype');
   font-weight: 700; font-style: normal;
 }
 @font-face {
   font-family: 'Avenir';
-  src: url('font/AvenirHeavyOblique.ttf') format('truetype');
+  src: url('AvenirHeavyOblique.ttf') format('truetype');
   font-weight: 700; font-style: italic;
 }
