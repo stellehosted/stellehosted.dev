@@ -1,0 +1,81 @@
+/* ===== dialog component (shared: see dialog.js, which builds the markup) =====
+   The Sketch "Dialog": a modal <dialog> (Esc, focus trap and the inert page behind it come for
+   free) holding a Glass (Secondary) sheet inset 150 units (7.8125em) from every edge of the
+   viewport, 50 units of padding, art on the left and title + date + description on the right.
+   The <dialog> itself is just a transparent full-viewport frame, so a click outside the sheet
+   closes it, and the sheet is a child (not the dialog) because glass.js puts the rim next to the
+   surface. Sizes are in em: .dialog's font-size is the page unit (1 unit == 19.2 canvas px), so it
+   never depends on the page's own font-size. Needs font.css, text.css and glass.css/glass.js. */
+.dialog {
+  padding: 0; border: 0;
+  max-width: none; max-height: none;
+  font: inherit; font-size: min(1vw, 1.7778vh); color: #fff;
+  background: none;
+}
+.dialog[open] { position: fixed; inset: 0; width: 100%; height: 100%; margin: 0; overflow: visible; }
+.dialog::backdrop { background: rgba(0,0,0,0.5); backdrop-filter: blur(0.4167rem); -webkit-backdrop-filter: blur(0.4167rem); }   /* Sketch "BG": black 50%, 8px blur */
+.dialog-sheet {
+  --glass-radius: 0.833;   /* 16 */
+  position: absolute; inset: 7.8125em;
+  display: grid; grid-template-columns: calc((100% - 3.333em) / 2) minmax(0, 1fr); grid-template-rows: minmax(0, 1fr);   /* art: half the content box minus the gap, always */
+  column-gap: 3.333em;     /* 64 */
+  padding: 2.604em;        /* 50 */
+}
+.dialog-stage { position: relative; min-width: 0; touch-action: pan-y; }
+/* The photo is drawn at its own aspect ratio, not letterboxed, so the radius (8) and the soft
+   shadow follow the picture itself. fitArt() in dialog.js sizes it. */
+.dialog-stage img {
+  position: absolute; inset: 0; margin: auto; display: block;
+  border-radius: 0.417em; box-shadow: 0 0 0.833em rgba(0,0,0,0.25);
+  transition: opacity 0.2s ease;
+}
+.dialog-stage img:not(.ready) { opacity: 0; }   /* no broken-image alt text while a big file loads */
+.dialog-sheet:focus { outline: none; }   /* focus lands here on open (autofocus), not on a button */
+.dialog button { font: inherit; color: #fff; cursor: pointer; border: 0; background: none; }
+.dialog button:focus-visible { outline: 0.208em solid #fff; outline-offset: 0.104em; }
+.dialog-nav, .dialog-close {
+  position: absolute;
+  display: grid; place-items: center;
+  padding: 0;
+}
+.dialog-nav svg, .dialog-close svg { display: block; fill: none; stroke: #fff; stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; opacity: 0.5; transition: opacity 0.15s ease; }
+.dialog-nav:hover svg, .dialog-close:hover svg { opacity: 1; }
+/* Chevrons: an 8x24 path with a 4 stroke, 32 from the
+   photo. The button is a bigger hit area centred on the path (its svg adds 2 for the stroke). */
+.dialog-nav { top: calc(50% - 1.75em); width: 2.5em; height: 3.5em; }
+.dialog-nav svg { width: 0.625em; height: 1.458em; }
+/* Centred on the photo (--art-w, set in fitArt): path centre = photo edge + 32 + 4 units; button is 48 wide. */
+.dialog-prev { right: calc(50% + var(--art-w, 25.365em) / 2 + 1.875em - 1.25em); }
+.dialog-next { left: calc(50% + var(--art-w, 25.365em) / 2 + 1.875em - 1.25em); }
+/* The X is 16x16 with a 4 stroke, centred 72 units from the sheet's top-right corner. */
+.dialog-close { top: 2.708em; right: 2.708em; width: 2.083em; height: 2.083em; z-index: 1; }
+.dialog-close svg { width: 1.042em; height: 1.042em; }
+.dialog-dots {
+  position: absolute; left: 0; right: 0; bottom: 0.833em;
+  width: fit-content; margin: 0 auto;
+  display: flex; gap: 0.521em;
+  padding: 0.417em 0.625em; border-radius: 1em;
+  background: rgba(0,0,0,0.45);   /* readable on any art */
+}
+.dialog-dots button { width: 0.625em; height: 0.625em; padding: 0; border-radius: 50%; background: rgba(255,255,255,0.4); }
+.dialog-dots button[aria-current="true"] { background: #fff; }
+.dialog.single .dialog-nav, .dialog.single .dialog-dots { display: none; }
+.dialog-info {
+  display: flex; flex-direction: column; gap: 0.625em;
+  min-width: 0; padding: 0.833em 0.833em 0.833em 0;   /* 16 above, below and to the right (Sketch: Info at y=16, Description 16 short of the edges) */
+  overflow-y: auto; scrollbar-width: none;
+}
+.dialog-date { font-size: 1.0417em; }   /* Subtitle with its size overridden to 20px, as in Sketch */
+.dialog-title { padding-right: 2.5em; }   /* clear of the X */
+.dialog-desc { margin-top: 1.042em; }
+.dialog-desc > * + * { margin-top: 1.042em; }
+.dialog-desc :is(h1, h2, h3, h4, h5, h6) { font-size: 1.2em; line-height: 1.3; font-weight: 800; }
+.dialog-desc :is(h1, h2) { font-size: 1.5em; }
+.dialog-desc :is(h4, h5, h6) { font-size: 1em; }
+.dialog-desc a { color: inherit; text-decoration: underline; }
+.dialog-desc :is(ul, ol) { padding-left: 1.25em; }
+.dialog-desc blockquote { padding-left: 0.833em; border-left: 0.104em solid rgba(255,255,255,0.3); color: rgba(255,255,255,0.75); }
+.dialog-desc :is(code, pre) { font-family: ui-monospace, Menlo, monospace; font-size: 0.9em; }
+.dialog-desc pre { overflow-x: auto; padding: 0.625em; border-radius: 0.417em; background: rgba(255,255,255,0.08); }
+.dialog-desc img { max-width: 100%; border-radius: 0.417em; }
+.dialog-desc hr { border: 0; border-top: 0.052em solid rgba(255,255,255,0.2); }

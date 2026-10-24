@@ -7,7 +7,7 @@
    Markup (sidebar.js adds the .sidebar-bg strip before .sidebar, and the light / glow / text spans
    inside each heading):
      <nav class="sidebar">
-       <h1 class="sidebar-title">Art</h1>
+       <h1 class="title sidebar-title">Art</h1>
        <a class="sidebar-heading" href="#a">Heading</a>
        <div class="sidebar-group">
          <a class="sidebar-heading" href="#b">Heading</a>
@@ -19,19 +19,9 @@
    lit light. Put the nav after the page content in the DOM: the strip blurs whatever paints
    before it. */
 
-/* Headings share one look: white 75% -> 100% vertical gradient fill with a soft white glow. The
-   glow is a drop-shadow filter rather than text-shadow because the fill is clipped to the glyphs
-   (a text-shadow would show through the transparent fill). Sidebar titles and headings use it, and
-   so can a page's own section headings via class="glow-text". */
-.glow-text, .sidebar-title, .sidebar-heading-text {
-  display: inline-block;
-  background: linear-gradient(to bottom, rgba(255,255,255,0.75), #fff);
-  -webkit-background-clip: text; background-clip: text;
-  color: transparent;
-  font-weight: 800;   /* Sketch weight 11 */
-  line-height: 1.1;
-  filter: drop-shadow(0 0.208rem 0.833rem rgba(255,255,255,0.25));
-}
+/* The title and the headings are the shared .title / .heading text styles (text.css, link it before
+   this file): sidebar.js adds .heading to each heading's text, and the title carries .title in the
+   markup. Only the heading's size is overridden below (32px, a local override in Sketch). */
 
 /* Content: vertically centered stack, text left edge at x=100. The column itself ignores the
    pointer so the wheel still scrolls the page behind it; only the links are interactive. */
@@ -48,11 +38,9 @@
 .sidebar a { pointer-events: auto; color: inherit; text-decoration: none; }
 .sidebar h1, .sidebar ul { margin: 0; padding: 0; list-style: none; }
 
-/* "Art": 80px, weight 900 (Sketch 14), glow 0 4 24 */
+/* "Art" is the Title style as is (80px, weight 900, text.css). */
 .sidebar-title {
-  font-size: 4.1667rem; font-weight: 900;
   margin-bottom: 0.833rem;  /* 24 to the first heading (with the 8 gap) */
-  filter: drop-shadow(0 0.208rem 1.25rem rgba(255,255,255,0.25));
 }
 
 /* Heading = the pill. It starts 52px left of the text (x=48) so the light sits at x=72. */
@@ -65,7 +53,7 @@
   border-radius: 0.833rem;
   overflow: hidden;                          /* masks the glow to the pill */
 }
-.sidebar-heading-text { position: relative; font-size: 1.6667rem; filter: drop-shadow(0 0 0.833rem rgba(255,255,255,0.25)); }   /* 32px */
+.sidebar-heading-text { position: relative; font-size: 1.6667rem; }   /* the Heading style (text.css) with its size overridden to 32px, as in Sketch */
 
 /* Pill ("Hover"): gray 10%, 8px background blur, white inner glow. Shown on hover and when active. */
 .sidebar-heading::before {

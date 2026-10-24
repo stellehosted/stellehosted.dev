@@ -1,4 +1,4 @@
-/* Shared fonts: Futura Now Headline, every cut in /font. Link this from each page instead of
+/* Shared fonts: Futura Now Headline (every cut in /font), plus Avenir (below) for body text. Link this from each page instead of
    declaring @font-face locally:  <link rel="stylesheet" href="/lib/font.css">
    Then just use font-family: 'FuturaNowHeadline' with a font-weight (100-950) and font-style.
    Each cut maps to its CSS weight number, so the browser picks the right file by itself. Files are
@@ -93,4 +93,27 @@
   font-family: 'FuturaNowHeadline';
   src: url('font/FuturaNowHeadlineExtraBlackItalic.ttf') format('truetype');
   font-weight: 950; font-style: italic;
+}
+
+/* Avenir, for the Body text style (text.css). Browsers can't load the .ttc, so these four faces were
+   split out of font/Avenir.ttc: Book is the regular, Heavy is what bold maps to. */
+@font-face {
+  font-family: 'Avenir';
+  src: url('font/AvenirBook.ttf') format('truetype');
+  font-weight: 400; font-style: normal;
+}
+@font-face {
+  font-family: 'Avenir';
+  src: url('font/AvenirBookOblique.ttf') format('truetype');
+  font-weight: 400; font-style: italic;
+}
+@font-face {
+  font-family: 'Avenir';
+  src: url('font/AvenirHeavy.ttf') format('truetype');
+  font-weight: 700; font-style: normal;
+}
+@font-face {
+  font-family: 'Avenir';
+  src: url('font/AvenirHeavyOblique.ttf') format('truetype');
+  font-weight: 700; font-style: italic;
 }
