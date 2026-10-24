@@ -4,8 +4,8 @@
      .glass-secondary  dark gray (#202020) 20% fill, 32px background blur, wide faint inner glow (the dialog sheet)
    (The dock's white-fill pills are the "Dock" style; not reusable, built in dock.js.)
    Both also get (from glass.js) a 2px gradient rim in overlay blend. Put the class on any element; give it its own position and size
-   (corner radius is --glass-radius, in --u units, default 1.25). Use <link rel="stylesheet" href="/lib/glass.css"> in <head> and
-   <script src="/lib/glass.js"></script> at the end of <body>.
+   (corner radius is --glass-radius, in --u units, default 1.25). Use <link rel="stylesheet" href="/lib/styles/glass.css"> in <head> and
+   <script src="/lib/styles/glass.js"></script> at the end of <body>.
    Every length is a multiple of --u, which is 1rem times --s (scale, default 1; it inherits, so
    a nested glass element scales with its parent). Sketch scales the pills on mobile but not the
    rim, so the rim stays 2 canvas px. The styles are fixed: only the radius and --s are per element. */

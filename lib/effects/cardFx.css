@@ -10,8 +10,7 @@
      <a class="card-fx-hit"><div class="card-fx">...</div></a>
      <div class="card-fx card-fx-hit">...</div>
    The glowing element's ::after is used, so give it none of its own. Its overflow can be hidden.
-   Options (set on either element, they inherit): --card-fx-color (default white 70%),
-   --card-fx-size (default 2.5rem), --card-fx-time (default 0.25s). */
+   Option (set on either element, it inherits): --card-fx-size (default 2.5rem). */
 
 :where(.card-fx) { position: relative; }   /* :where() so a page can still position it itself */
 
@@ -20,9 +19,9 @@
   position: absolute; inset: 0;
   border-radius: inherit;
   pointer-events: none;
-  box-shadow: inset 0 0 var(--card-fx-size, 2.5rem) var(--card-fx-color, rgba(255,255,255,0.7));
+  box-shadow: inset 0 0 var(--card-fx-size, 2.5rem) rgba(255,255,255,0.7);
   opacity: 0;
-  transition: opacity var(--card-fx-time, 0.25s) ease;
+  transition: opacity 0.25s ease;
 }
 
 .card-fx-hit:hover .card-fx::after,
