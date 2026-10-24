@@ -125,12 +125,11 @@ const MIME = {
 
 // ---- Art content -----------------------------------------------------------------------------
 // No database and no metadata files: the folder *is* the content. Drop files in and they show up.
-//   content/art/ocs/<Name>.png            one OC card each. A leading "01 " sets the order.
+//   content/art/ocs/<Name>.png            one OC card each. A leading "1 " sets the order.
 //   content/art/ocs/colors.json           card gradients (none if missing): { "Stelle": ["#b39ef2", "#6248b3"] }
-//   content/art/[YYYY-MM-DD] Title.png    one timeline stop each. No [date] in the name = file's modified date.
+//   content/art/[YYYY-MM-DD] Title.png    one timeline stop each. No [date] in the name = skipped.
 // Either kind of entry can instead be a folder of images (a carousel), named the same way, and can
-// have a description: "<same name>.md" beside a single image, or description.md inside a folder
-// (.txt works too; .md is preferred when both exist).
+// have a description: "<same name>.md" beside a single image, or description.md inside a folder.
 const IMAGE_EXT = new Set(['.png', '.jpg', '.jpeg', '.webp', '.avif', '.gif', '.heic', '.heif']);
 // Browsers (other than Safari) can't show HEIC, so those files are converted to JPEG when served.
 const NEEDS_CONVERSION = new Set(['.heic', '.heif']);
@@ -242,7 +241,7 @@ async function imageSize(file) {
 
 // An "entry" is one piece of art: either a single image file, or a folder of images (a carousel).
 // Its description is markdown in "<same name>.md" beside a single image, or "description.md"
-// inside a folder (or the same with .txt). Returns { base, mtime, description, images: [{ src, width, height }] } for each.
+// inside a folder. Returns { base, description, images: [{ src, width, height }] } for each.
 async function scanEntries(dirParts, skipDirs = []) {
   const dir = path.join(CONTENT_DIR, ...dirParts);
   let dirents;
@@ -267,15 +266,14 @@ async function scanEntries(dirParts, skipDirs = []) {
 
       const base = isFolder ? e.name : path.parse(e.name).name;
       const descBase = isFolder ? path.join(dir, e.name, 'description') : path.join(dir, base);
-      const [mtime, description, images] = await Promise.all([
-        fs.promises.stat(path.join(dir, e.name)).then((st) => st.mtime),
-        readText(`${descBase}.md`).then((t) => t || readText(`${descBase}.txt`)),
+      const [description, images] = await Promise.all([
+        readText(`${descBase}.md`),
         Promise.all(files.map(async (file) => {
           const size = await imageSize(path.join(CONTENT_DIR, ...parts, file));
           return { src: contentUrl(...parts, file), width: size?.width ?? null, height: size?.height ?? null };
         })),
       ]);
-      return { base, mtime, description, images };
+      return { base, description, images };
     });
   return (await Promise.all(found)).filter(Boolean);
 }
@@ -292,57 +290,43 @@ async function scanArt() {
     return { name, from, to, description, images };
   });
 
-  const pieces = (await scanEntries(['art'], ['ocs'])).map(({ base, mtime, description, images }) => {
+  // The timeline is organised by date, so an entry without [YYYY-MM-DD] in its name is left out.
+  const pieces = [];
+  for (const { base, description, images } of await scanEntries(['art'], ['ocs'])) {
     const m = base.match(/^\[(\d{4}-\d{2}-\d{2})\][\s_-]*(.*)$/);
-    return {
-      title: (m ? m[2] : base) || 'Untitled',
-      date: m ? m[1] : mtime.toISOString().slice(0, 10),
-      description,
-      images,
-    };
-  });
+    if (!m) { console.warn(`[art] skipping "${base}": no [YYYY-MM-DD] in the name`); continue; }
+    pieces.push({ title: m[2] || 'Untitled', date: m[1], description, images });
+  }
   pieces.sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : byName(a.title, b.title)));
 
   return { ocs, pieces };
 }
 
 // ---- HEIC -> JPEG ----------------------------------------------------------------------------
-// iPhone photos are HEIC. Node can't decode them, so shell out: `heif-convert` (Alpine package
-// libheif-tools, installed in server/Dockerfile) or, when developing on a Mac, the built-in `sips`.
-// Results are cached by source path + mtime + size, so each file is converted once, and
-// concurrent requests for the same file share one conversion.
+// iPhone photos are HEIC, which only Safari can display. Node can't decode them, so shell out:
+// `heif-convert` (Alpine package libheif-tools, installed in server/Dockerfile) or, when developing
+// on a Mac, the built-in `sips`. Each file is converted once and cached by source path + mtime +
+// size. Simultaneous requests may both convert; they write identical bytes and rename is atomic.
 const run = promisify(execFile);
 const HEIC_CACHE_DIR = path.join(os.tmpdir(), 'stellehosted-heic');
-const conversions = new Map();
 
 async function convertHeic(src, dest) {
-  const work = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'heic-'));
+  await fs.promises.mkdir(HEIC_CACHE_DIR, { recursive: true });
+  const tmp = `${dest}.${process.pid}.${Date.now()}.jpg`;
   try {
-    const out = path.join(work, 'out.jpg');
-    try {
-      await run('heif-convert', ['-q', '88', src, out]);
-    } catch (err) {
-      if (err.code !== 'ENOENT') throw err;
-      await run('sips', ['-s', 'format', 'jpeg', '-s', 'formatOptions', '88', src, '--out', out]);
-    }
-    // heif-convert writes out-1.jpg, out-2.jpg... for files holding several images (bursts, Live Photos).
-    const made = (await fs.promises.readdir(work)).filter((f) => f.endsWith('.jpg')).sort(byName)[0];
-    await fs.promises.mkdir(HEIC_CACHE_DIR, { recursive: true });
-    await fs.promises.rename(path.join(work, made), dest);
-  } finally {
-    fs.promises.rm(work, { recursive: true, force: true }).catch(() => {});
+    await run('heif-convert', ['-q', '88', src, tmp]);
+  } catch (err) {
+    if (err.code !== 'ENOENT') throw err;
+    await run('sips', ['-s', 'format', 'jpeg', '-s', 'formatOptions', '88', src, '--out', tmp]);
   }
+  await fs.promises.rename(tmp, dest);
 }
 
 // Path of the cached JPEG for a HEIC file, converting first if needed.
 async function jpegFor(filePath, stat) {
   const key = crypto.createHash('sha1').update(`${filePath}|${stat.mtimeMs}|${stat.size}`).digest('hex');
   const dest = path.join(HEIC_CACHE_DIR, `${key}.jpg`);
-  if (fs.existsSync(dest)) return dest;
-  if (!conversions.has(dest)) {
-    conversions.set(dest, convertHeic(filePath, dest).finally(() => conversions.delete(dest)));
-  }
-  await conversions.get(dest);
+  if (!fs.existsSync(dest)) await convertHeic(filePath, dest);
   return dest;
 }
 
