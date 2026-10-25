@@ -1,14 +1,22 @@
-/* ===== glass surfaces (shared: see glass.js) =====
-   The Sketch shared styles "Glass" and "Glass (Secondary)" as classes:
-     .glass            gray 20% fill, 16px background blur, soft outer and inner glows
-     .glass-secondary  dark gray (#202020) 20% fill, 32px background blur, wide faint inner glow (the dialog sheet)
-   (The dock's white-fill pills are the "Dock" style; not reusable, built in dock.js.)
-   Both also get (from glass.js) a 2px gradient rim in overlay blend. Put the class on any element; give it its own position and size
-   (corner radius is --glass-radius, in --u units, default 1.25). Use <link rel="stylesheet" href="/lib/styles/glass.css"> in <head> and
-   <script src="/lib/styles/glass.js"></script> at the end of <body>.
-   Every length is a multiple of --u, which is 1rem times --s (scale, default 1; it inherits, so
-   a nested glass element scales with its parent). Sketch scales the pills on mobile but not the
-   rim, so the rim stays 2 canvas px. The styles are fixed: only the radius and --s are per element. */
+/* -- Glass -----------------------
+  The Sketch shared styles "Glass" and "Glass (Secondary)", as classes
+    .glass            gray 20% fill, 16px background blur, soft outer and inner glows
+    .glass-secondary  dark gray (#202020) 20% fill, 32px background blur, wide faint inner glow (the dialog sheet)
+  (The dock's white-fill pills are the "Dock" style: not reusable, built in dock.js.)
+  Both also get a 2px gradient rim in overlay blend from glass.js.
+
+  Usage
+    <head>       <link rel="stylesheet" href="/lib/styles/glass.css">
+    <body> end   <script src="/lib/styles/glass.js"></script>
+    class="glass" or class="glass-secondary" on any element, which needs its own position and size
+
+  Notes
+  - Fixed: fill, blur, glows, rim. Only the radius and the scale are per element
+  - Customizable: --glass-radius (in --u units, default 1.25) and --s (scale, default 1, e.g. on mobile)
+  - Every length is a multiple of --u, which is 1rem times --s. --s inherits, so a nested glass element scales with its parent. Sketch scales the pills on mobile but not the rim, so the rim stays 2 canvas px
+  - Keep the rim's container free of transform / z-index / position: fixed, or the overlay blend can't see the page behind it
+*/
+
 .glass, .glass-secondary {
   --u: calc(var(--s, 1) * 1rem);
   border-radius: calc(var(--glass-radius, 1.25) * var(--u));   /* the layer's radius, not part of the style */

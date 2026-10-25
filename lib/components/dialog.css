@@ -1,11 +1,13 @@
-/* ===== dialog component (shared: see dialog.js, which builds the markup) =====
-   The Sketch "Dialog": a modal <dialog> (Esc, focus trap and the inert page behind it come for
-   free) holding a Glass (Secondary) sheet inset 150 units (7.8125em) from every edge of the
-   viewport, 50 units of padding, art on the left and title + date + description on the right.
-   The <dialog> itself is just a transparent full-viewport frame, so a click outside the sheet
-   closes it, and the sheet is a child (not the dialog) because glass.js puts the rim next to the
-   surface. Sizes are in em: .dialog's font-size is the page unit (1 unit == 19.2 canvas px), so it
-   never depends on the page's own font-size. Needs font.css, text.css and glass.css/glass.js. */
+/* -- Dialog ----------------------
+  The Sketch "Dialog": a modal <dialog> (Esc, focus trap and the inert page behind it come for
+  free) holding a Glass (Secondary) sheet inset 150 units (7.8125em) from every edge of the
+  viewport, 50 units of padding, art on the left and title + date + description on the right.
+  The <dialog> itself is just a transparent full-viewport frame, so a click outside the sheet
+  closes it, and the sheet is a child (not the dialog) because glass.js puts the rim next to the
+  surface. Sizes are in em: .dialog's font-size is the page unit (1 unit == 19.2 canvas px), so it
+  never depends on the page's own font-size. Needs font.css, text.css and glass.css/glass.js. 
+*/
+
 .dialog {
   padding: 0; border: 0;
   max-width: none; max-height: none;

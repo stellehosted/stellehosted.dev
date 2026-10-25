@@ -1,15 +1,15 @@
 /* ===== text styles (shared) =====
-   The Sketch shared text styles as classes. They are fixed: no size or glow knobs. A page that needs
-   a different size (Sketch layers with a local override) sets font-size in its own CSS and says so. Use
-   <link rel="stylesheet" href="/lib/styles/text.css"> in <head> (with font.css, which has the fonts).
-     .title       80px, weight 900: white 75% -> 100% vertical gradient fill + a 0 12 24 glow. The
-                  glow is a drop-shadow filter, not text-shadow, because the fill is clipped to the
-                  glyphs (a text-shadow would show through the transparent fill).
+   The Sketch shared text styles as classes
+   - Use <link rel="stylesheet" href="/lib/styles/text.css"> in <head> w/ font.css
+   - The glow is a drop-shadow filter, not text-shadow, because the fill is clipped to the glyphs (a text-shadow would show through the transparent fill).
+
+     .title       80px, weight 900: white 75% -> 100% vertical gradient fill + a 0 12 24 glow.
      .heading     40px, weight 800: the same fill with a 0 4 16 glow.
+     .decorative  20px, weight 800: the same fill with a 0 4 16 glow (a card's title).
      .subheading  20px on 24, weight 400, white.
      .subtitle    the small dim date line: white 50%, 12px on 1.1 (the art cards' date).
      .body-text   running text, e.g. an artwork's description: Avenir, white, 24px on 1.2. */
-.title, .heading {
+.title, .heading, .decorative {
   display: inline-block;
   background: linear-gradient(to bottom, rgba(255,255,255,0.75), #fff);
   -webkit-background-clip: text; background-clip: text;
@@ -25,6 +25,10 @@
   font-size: 2.0833rem;   /* 40 */
   font-weight: 800;
   filter: drop-shadow(0 0.208rem 0.833rem rgba(255,255,255,0.25));
+}
+.decorative {
+  font-size: 1.0417rem;   /* 20 */
+  font-weight: 800;
 }
 .subheading {
   font-size: 1.0417rem;   /* 20 */

@@ -1,16 +1,19 @@
-/* ===== cardFx: inner glow on hover (shared, CSS only) =====
-   A white glow that fades in along the inside edge of a card when it's hovered or focused. It's
-   an overlay (a ::after on the glowing element), so unlike a scale or a filter it doesn't affect
-   the element's own backdrop-filter / glass blur, and it follows the element's border-radius.
+/* -- Card FX ---------------------
+  Brightens a card's inner glow on hover/focus: a white glow that fades in along the inside edge of the card. It's an overlay (a ::after on the glowing element), so unlike a scale or a filter it doesn't affect the element's own backdrop-filter / glass blur, and it follows the element's border-radius.
 
-   Two roles, like glowFx.css (the scale + glow for icons and text):
-     .card-fx-hit  the hitbox: whatever should react to the pointer (or keyboard focus).
-     .card-fx      the element that gets the glow. It can be the hitbox itself, or inside it.
-   Usage:
-     <a class="card-fx-hit"><div class="card-fx">...</div></a>
-     <div class="card-fx card-fx-hit">...</div>
-   The glowing element's ::after is used, so give it none of its own. Its overflow can be hidden.
-   Option (set on either element, it inherits): --card-fx-size (default 2.5rem). */
+  Two roles, like glowFx.css (the scale + glow for icons and text):
+    .card-fx-hit  the hitbox: whatever should react to the pointer (or keyboard focus)
+    .card-fx      the element that gets the glow. It can be the hitbox itself, or inside it
+
+  Usage
+    <head>  <link rel="stylesheet" href="/lib/effects/cardFx.css">
+    <a class="card-fx-hit"><div class="card-fx">...</div></a>
+    <div class="card-fx card-fx-hit">...</div>
+
+  Notes
+  - Optional (set on either element, it inherits): --card-fx-size (default 2.5rem)
+  - It uses the card's ::after, so the card shouldn't have its own. Its overflow can be hidden
+*/
 
 :where(.card-fx) { position: relative; }   /* :where() so a page can still position it itself */
 

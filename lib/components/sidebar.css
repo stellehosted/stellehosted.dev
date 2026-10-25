@@ -1,4 +1,4 @@
-/* ===== sidebar component (shared across pages: see sidebar.js) =====
+/* -- Sidebar ---------------------
    The left column from the Sketch pages: a 384px-wide sidebar pinned to the left of the 1920x1080
    design canvas, over a dark, blurred strip that runs to the window's left edge. Sizes are in rem,
    so it scales with the canvas (see the unit system in each page). Text inherits the page's font
