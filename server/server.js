@@ -373,6 +373,49 @@ async function jpegFor(filePath, stat) {
   return dest;
 }
 
+// ---- Thumbnails ------------------------------------------------------------------------------
+// Cards show the art at a few hundred pixels, so "/content/...?w=960" serves a copy at most that wide
+// instead of the original (the dialog still asks for the original). Widths snap up to a tier so the
+// cache stays small. Like HEIC, resizing shells out (and is cached by source + mtime + size + width):
+// `vipsthumbnail` (Alpine package vips-tools) -> WebP, or on a Mac `sips` -> JPEG/PNG.
+// Anything that can't be shrunk (GIFs keep their animation, files already small enough, a failed
+// resize) is sent as the original.
+const THUMB_WIDTHS = [480, 960, 1440, 2000];
+const THUMB_CACHE_DIR = path.join(os.tmpdir(), 'stellehosted-thumbs');
+const THUMB_TYPES = { '.webp': 'image/webp', '.jpg': 'image/jpeg', '.png': 'image/png' };
+
+async function resize(src, dest, width, srcExt) {
+  const tmp = `${dest}.${process.pid}.${Date.now()}${path.extname(dest)}`;
+  try {
+    await run('vipsthumbnail', [src, '--size', `${width}x100000`, '-o', `${tmp}[Q=82]`]);
+  } catch (err) {
+    if (err.code !== 'ENOENT') throw err;
+    await run('sips', ['-s', 'format', srcExt === '.png' ? 'png' : 'jpeg', '-s', 'formatOptions', '82', '--resampleWidth', String(width), src, '--out', tmp]);
+  }
+  await fs.promises.rename(tmp, dest);
+}
+
+// { path, size, type } of the thumbnail of `sourcePath` (a file the browser can show), or null.
+async function thumbnailFor(sourcePath, stat, width) {
+  const ext = path.extname(sourcePath).toLowerCase();
+  if (ext === '.gif') return null;
+  const natural = await imageSize(sourcePath);
+  if (!natural || natural.width <= width) return null;
+  const key = crypto.createHash('sha1').update(`${sourcePath}|${stat.mtimeMs}|${stat.size}|${width}`).digest('hex');
+  await fs.promises.mkdir(THUMB_CACHE_DIR, { recursive: true });
+  const found = Object.keys(THUMB_TYPES).map((e) => path.join(THUMB_CACHE_DIR, key + e)).find((f) => fs.existsSync(f));
+  const dest = found || path.join(THUMB_CACHE_DIR, key + (await resizeTarget(ext)));
+  if (!found) await resize(sourcePath, dest, width, ext);
+  return { path: dest, size: (await fs.promises.stat(dest)).size, type: THUMB_TYPES[path.extname(dest)] };
+}
+
+// WebP when vipsthumbnail is installed, otherwise what sips can write.
+let hasVips;
+async function resizeTarget(srcExt) {
+  hasVips ??= await run('vipsthumbnail', ['--version']).then(() => true, () => false);
+  return hasVips ? '.webp' : srcExt === '.png' ? '.png' : '.jpg';
+}
+
 // Serves uploaded files. Unlike the site's own files these are big, so revalidate with
 // Last-Modified (304 when unchanged) instead of re-sending the image on every visit.
 function serveContent(req, res, urlPath) {
@@ -414,6 +457,20 @@ function serveContent(req, res, urlPath) {
         console.error('[content] HEIC conversion failed for', rel, '-', e.message);
         res.writeHead(415).end('Could not convert HEIC');
         return;
+      }
+    }
+    const asked = Number(new URL(req.url, 'http://x').searchParams.get('w'));
+    if (asked > 0) {
+      try {
+        const width = THUMB_WIDTHS.find((w) => w >= asked) ?? THUMB_WIDTHS.at(-1);
+        const thumb = await thumbnailFor(sendPath, stat, width);
+        if (thumb) {
+          sendPath = thumb.path;
+          size = thumb.size;
+          headers['Content-Type'] = thumb.type;
+        }
+      } catch (e) {
+        console.error('[content] resize failed for', rel, '-', e.message);   // falls back to the original
       }
     }
     res.writeHead(200, { ...headers, 'Content-Length': size });
