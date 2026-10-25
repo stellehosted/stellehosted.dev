@@ -1,0 +1,45 @@
+/* -- Card ------------------------
+   The Sketch "Card": a Glass card (radius 16, padding 8 8 16) with the art on top and the title +
+   date under it. The height is fixed at 465 (a 400 tall image, 20 gap, the info line) and the width
+   follows the art (card.js sets it on .card-box from the image's size). Behind the image sits a
+   16px-blurred copy of it, which bleeds the art's colors into the frosted glass around it.
+   .card-box holds the card and its glass rim (glass.js puts the rim next to the surface).
+   Needs font.css, text.css and glass.css / glass.js. */
+.card-box { position: relative; flex: 0 0 auto; width: 16.667rem; }   /* 320 until card.js sets it */
+.card {
+  --glass-radius: 0.833;   /* 16 */
+  position: relative;
+  display: flex; flex-direction: column; gap: 1.042rem;   /* 20 */
+  height: 24.219rem;                                     /* 465 */
+  padding: 0.417rem 0.417rem 0.833rem;                   /* 8 8 16 */
+  overflow: hidden;
+}
+.card-image {
+  position: relative; flex: none;
+  height: 20.833rem;   /* 400 */
+  border-radius: 0.417rem;
+  overflow: hidden;
+}
+.card-image > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.card-blur {
+  position: absolute; left: 0.417rem; top: 0.417rem;
+  width: calc(100% - 0.833rem); height: 20.833rem;
+  object-fit: cover;
+  filter: blur(0.833rem);   /* 16 */
+  transition: opacity 0.2s ease;
+  will-change: filter;      /* its own layer, so Safari rasterizes the blur once, at full size */
+}
+/* A backdrop or filter blur computed before the image arrives can stick (Safari keeps the blur of
+   the empty image and draws the loaded picture with hard, un-faded edges). So the copy stays hidden
+   and unblurred until card.js marks it .loaded, a frame after the image has decoded. */
+.card-blur:not(.loaded) { filter: none; opacity: 0; }
+/* It fills what's left of the 465 (21, the line at 20), so a shrunk title stays centered on it. */
+.card-info {
+  position: relative; flex: 1; min-height: 0;
+  display: flex; align-items: center; gap: 0.417rem;   /* 8 */
+  padding: 0 0.417rem;
+}
+/* One line only: card.js shrinks the font (from 20) until it fits; the ellipsis is the last resort. */
+.card-title { flex: 1 1 auto; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.card-date { flex: none; }
+.card img:not([src]) { visibility: hidden; }   /* off-screen images have no src: no alt-text flash */
