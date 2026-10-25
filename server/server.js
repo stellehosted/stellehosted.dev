@@ -290,16 +290,59 @@ async function scanArt() {
     return { name, from, to, description, images };
   });
 
-  // The timeline is organised by date, so an entry without [YYYY-MM-DD] in its name is left out.
+  const pieces = datedPieces(await scanEntries(['art'], ['ocs']), 'art');
+  return { ocs, pieces };
+}
+
+// Galleries are organised by date, so an entry without [YYYY-MM-DD] in its name is left out.
+// Returns { title, date, description, images } for each, newest first.
+const DATED = /^\[(\d{4}-\d{2}-\d{2})\][\s_-]*(.*)$/;
+
+function datedPieces(entries, label) {
   const pieces = [];
-  for (const { base, description, images } of await scanEntries(['art'], ['ocs'])) {
-    const m = base.match(/^\[(\d{4}-\d{2}-\d{2})\][\s_-]*(.*)$/);
-    if (!m) { console.warn(`[art] skipping "${base}": no [YYYY-MM-DD] in the name`); continue; }
+  for (const { base, description, images } of entries) {
+    const m = base.match(DATED);
+    if (!m) { console.warn(`[${label}] skipping "${base}": no [YYYY-MM-DD] in the name`); continue; }
     pieces.push({ title: m[2] || 'Untitled', date: m[1], description, images });
   }
-  pieces.sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : byName(a.title, b.title)));
+  return pieces.sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : byName(a.title, b.title)));
+}
 
-  return { ocs, pieces };
+// ---- Photos content --------------------------------------------------------------------------
+//   content/photos/<Section>/                      one gallery each. A leading "1 " sets the order.
+//   content/photos/<Section>/[YYYY-MM-DD] Title.jpg  a photo (or a folder of them: a carousel), as in art
+//   content/photos/<Section>/<Group>/               an undated folder is a sidebar subheading ("11th")
+// Photos directly in a section are grouped by year instead. Groups are ordered newest photo first.
+// Returns { sections: [{ name, groups: [{ name, pieces }] }] }; empty sections and groups are left out.
+async function scanPhotos() {
+  let dirents;
+  try {
+    dirents = await fs.promises.readdir(path.join(CONTENT_DIR, 'photos'), { withFileTypes: true });
+  } catch {
+    return { sections: [] };   // folder doesn't exist yet
+  }
+  const folders = (list) => list.filter((e) => e.isDirectory() && !e.name.startsWith('.')).map((e) => e.name).sort(byName);
+
+  const sections = await Promise.all(folders(dirents).map(async (dir) => {
+    const inside = await fs.promises.readdir(path.join(CONTENT_DIR, 'photos', dir), { withFileTypes: true });
+    const groupDirs = folders(inside).filter((name) => !DATED.test(name));
+    const loose = datedPieces(await scanEntries(['photos', dir], groupDirs), 'photos');
+
+    const groups = await Promise.all(groupDirs.map(async (sub) => ({
+      name: sub.replace(/^\d+[\s._-]+/, ''),
+      pieces: datedPieces(await scanEntries(['photos', dir, sub]), 'photos'),
+    })));
+    for (const piece of loose) {
+      const year = piece.date.slice(0, 4);
+      let group = groups.find((g) => g.name === year);
+      if (!group) groups.push(group = { name: year, pieces: [] });
+      group.pieces.push(piece);
+    }
+    const kept = groups.filter((g) => g.pieces.length);
+    kept.sort((a, b) => (a.pieces[0].date < b.pieces[0].date ? 1 : -1));   // pieces are newest first
+    return { name: dir.replace(/^\d+[\s._-]+/, ''), groups: kept };
+  }));
+  return { sections: sections.filter((s) => s.groups.length) };
 }
 
 // ---- HEIC -> JPEG ----------------------------------------------------------------------------
@@ -431,6 +474,18 @@ const server = http.createServer(async (req, res) => {
       res.end(JSON.stringify(data));
     } catch (err) {
       console.error('[art] scan failed:', err.message);
+      res.writeHead(500).end();
+    }
+    return;
+  }
+
+  if (url.pathname === '/api/photos') {
+    try {
+      const data = await scanPhotos();
+      res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-cache' });
+      res.end(JSON.stringify(data));
+    } catch (err) {
+      console.error('[photos] scan failed:', err.message);
       res.writeHead(500).end();
     }
     return;

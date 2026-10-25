@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Photos | stellehosted.dev</title>
+<link rel="icon" href="/branding/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/branding/favicon.png" type="image/png" sizes="256x256">
+<link rel="apple-touch-icon" href="/branding/apple-touch-icon.png">
+<link rel="stylesheet" href="/lib/font/font.css">
+<link rel="stylesheet" href="/lib/styles/text.css">
+<link rel="stylesheet" href="/lib/components/sidebar.css">
+<link rel="stylesheet" href="/lib/styles/glass.css">
+<link rel="stylesheet" href="/lib/components/dialog.css">
+<link rel="stylesheet" href="/lib/components/card.css">
+<link rel="stylesheet" href="/lib/components/gallery.css">
+<link rel="stylesheet" href="/lib/effects/cardFx.css">
+<style>
+  /* Same unit system as home.html / art.html: 1rem == 1 real Sketch unit on the 1920x1080 canvas, so every measurement below is the Sketch ("Photos" frame) value / 19.2. */
+  /* The document itself scrolls (no inner scroll box), as on art.html: the glass rims' overlay blend (glass.js) has to see the page. */
+  html {
+    font-size: min(1vw, 1.7778vh);
+    scrollbar-width: none;
+  }
+  html::-webkit-scrollbar { display: none; }
+  @media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #06060c;
+    font-family: 'FuturaNowHeadline', sans-serif;
+    color: #fff;
+  }
+  a { color: inherit; text-decoration: none; }
+
+  .bg {
+    position: fixed; inset: 0; z-index: -1;
+    background-image: url('/branding/Banner (Personal).png');
+    background-size: cover;
+    background-position: center;
+  }
+
+  /* Content column: x=502, first heading 100 below the top of the window, galleries 84 apart (the
+     Sketch "Content" stack). Bottom padding lets the last row scroll clear of the dock. */
+  .content {
+    position: relative;
+    width: 67.708rem;
+    margin-left: calc(50% - 50rem + 26.146rem);
+    padding: 5.208rem 0 12rem;
+  }
+  .content section { scroll-margin-top: 5.208rem; }
+  .content section + section { margin-top: 4.375rem; }   /* 84 */
+</style>
+</head>
+<body>
+
+<div class="bg"></div>
+<main class="content" id="sections"></main>
+
+<nav class="sidebar" id="nav">
+  <h1 class="title sidebar-title">Photos</h1>
+</nav>
+
+<script src="/lib/vendor/marked.umd.js"></script>
+<script src="/lib/styles/text.js"></script>
+<script src="/lib/components/card.js"></script>
+<script src="/lib/components/gallery.js"></script>
+<script>
+  // Content comes from the server's /api/photos, which lists whatever is in content/photos (see
+  // README "Adding content"): one gallery per section, and in the sidebar, one heading per section
+  // with its groups (years, or subfolders like "11th") under it. Built with DOM nodes, never innerHTML.
+  const el = (tag, className, text) => {
+    const node = document.createElement(tag);
+    if (className) node.className = className;
+    if (text !== undefined) node.textContent = text;
+    return node;
+  };
+  const slug = (text) => text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'section';
+  const link = (className, href, text) => {
+    const node = el('a', className, text);
+    node.href = href;
+    return node;
+  };
+
+  function render(sections) {
+    const main = document.getElementById('sections');
+    const nav = document.getElementById('nav');
+    if (!sections.length) {
+      main.append(createGallery({ title: 'Photos', items: [] }));
+      return;
+    }
+    for (const section of sections) {
+      const id = slug(section.name);
+      const items = section.groups.flatMap((g) => g.pieces);
+      const gallery = createGallery({ title: section.name, items, onOpen: (piece) => openDialog(piece) });
+      const node = el('section');
+      node.id = id;
+      main.appendChild(node).append(gallery);
+
+      // Each group's first card is the target of its sidebar link.
+      const cards = gallery.querySelectorAll('.gallery-hit');
+      const list = el('ul', 'sidebar-list');
+      let first = 0;
+      for (const group of section.groups) {
+        cards[first].id = `${id}-${slug(group.name)}`;
+        list.appendChild(el('li')).append(link('', '#' + cards[first].id, group.name));
+        first += group.pieces.length;
+      }
+      const navGroup = el('div', 'sidebar-group');
+      navGroup.append(link('sidebar-heading', '#' + id, section.name), list);
+      nav.append(navGroup);
+    }
+  }
+
+  // sidebar.js reads the headings once, when it runs, so it's loaded after they've been added.
+  const loadSidebar = () => {
+    const script = document.createElement('script');
+    script.src = '/lib/components/sidebar.js';
+    document.body.appendChild(script);
+  };
+
+  fetch('/api/photos')
+    .then((res) => res.json())
+    .then(({ sections }) => render(sections))
+    .catch(() => { if (!document.getElementById('sections').children.length) render([]); })
+    .finally(() => { loadSidebar(); window.glassRims?.(); });   // rims for the cards that were just added
+</script>
+<script src="/lib/styles/glass.js"></script>
+<script src="/lib/components/dialog.js"></script>
+<script src="/lib/components/dock.js"></script>
+</body>
+</html>
