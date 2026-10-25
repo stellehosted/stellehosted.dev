@@ -93,14 +93,20 @@
     content: ""; position: absolute; inset: 0;
     background: rgba(255,255,255,0.05);
   }
+  /* The copy is the card's whole picture (gradient + art + its offset shadow), so the blur is opaque
+     like a real backdrop blur. Blurring the bare art instead left its transparent areas see-through,
+     letting the sharp art underneath show through as haze. */
   .band-blur {
-    position: absolute; inset: 0; width: 100%; height: 100%;
-    object-fit: cover;
+    position: absolute; inset: 0;
+    background: linear-gradient(to bottom right, var(--from), var(--to));
     filter: blur(0.833rem);
     transform: scale(1.06);
     will-change: filter, transform;
   }
-  .band-blur:not(.loaded) { filter: none; }   /* same reasoning as .card-blur (card.css): blur the loaded picture */
+  .band-blur > img {
+    position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+    filter: drop-shadow(-1.042rem -0.417rem 0 var(--from, transparent));
+  }
   .oc-name {
     /* The padding gives the 4px outside stroke (and the hover glow, a filter) room inside the element's
        box: a filter clips to the box, and the stroke sticks out past a bare line box. The offsets
@@ -201,8 +207,8 @@
         card.style.setProperty('--to', oc.to);
       }
       const band = el('div', 'oc-band');
-      const bandBlur = img(oc.images[0].src, '');
-      bandBlur.className = 'band-blur';
+      const bandBlur = el('div', 'band-blur');
+      bandBlur.appendChild(img(oc.images[0].src, ''));
       band.appendChild(bandBlur);
       card.append(img(oc.images[0].src, oc.name), band, el('div', 'oc-name glow-fx', oc.name));
       const hit = hitbox(card, { title: oc.name, description: oc.description, images: oc.images });
