@@ -1,0 +1,33 @@
+/* -- Gallery ---------------------
+   The Sketch "Gallery": a Heading, 20 below it a wrapping run of Cards (gap 32, 1300 wide). Each card
+   is the Card component (card.css) inside a hitbox: an invisible button over it opens the entry.
+   Needs text.css (.heading) and card.css. */
+.gallery {
+  display: flex; flex-direction: column; gap: 1.042rem;   /* 20 */
+  width: 67.708rem; max-width: 100%;                      /* 1300 */
+}
+.gallery-cards {
+  display: flex; flex-wrap: wrap; gap: 1.667rem;          /* 32, across and down */
+  align-items: flex-start;
+}
+
+/* The hitbox: sized by the card inside it, never wider than the gallery (a wider panorama is cropped). */
+.gallery-hit { position: relative; flex: 0 0 auto; max-width: 100%; }
+.gallery-hit > .card-box { max-width: 100%; }
+.gallery-open {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  padding: 0; border: 0; background: none; cursor: pointer;
+}
+.gallery-open:focus-visible { outline: 0.208rem solid #fff; outline-offset: 0.208rem; border-radius: 0.833rem; }
+/* "3 images" pill on an entry that opens into a carousel */
+.gallery-badge {
+  position: absolute; top: 0.833rem; right: 0.833rem;
+  padding: 0.208rem 0.625rem; border-radius: 1rem;
+  font-size: 0.833rem; font-weight: 700; line-height: 1.4;
+  background: rgba(0,0,0,0.55);
+  pointer-events: none;
+}
+/* Year links land on a card, with the same 100 above it as a heading. */
+.gallery-hit { scroll-margin-top: 5.208rem; }
+
+.gallery-empty { font-size: 1.0417rem; opacity: 0.6; }

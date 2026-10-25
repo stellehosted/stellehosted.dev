@@ -13,6 +13,7 @@
 <link rel="stylesheet" href="/lib/styles/glass.css">
 <link rel="stylesheet" href="/lib/components/dialog.css">
 <link rel="stylesheet" href="/lib/components/card.css">
+<link rel="stylesheet" href="/lib/components/gallery.css">
 <link rel="stylesheet" href="/lib/effects/cardFx.css">
 <style>
   /* Same unit system as home.html: 1rem == 1 real Sketch unit on the 1920x1080 canvas, so every measurement below is the Sketch ("Art" frame) value / 19.2. Asset URLs are absolute because this page is served at /art (and /art/). */
@@ -115,69 +116,13 @@
     stroke-linejoin: round;
   }
 
-  /* More: a timeline of rows of art cards.
-     Each row: [date, right-aligned to x=570] 15 [16px timeline] 49 [cards, gap 32, 1152 wide].
-     The cards are the Card component (lib/components/card.css): all 465 tall, as wide as the art
-     at 400 tall, and the script fills each row with as many cards as fit the 1152. */
+  /* More: the Gallery component (lib/components/gallery.css): a heading over a wrapping run of Cards. */
   .more { margin-top: 4.375rem; }   /* 84 below the OC panel */
-  .rows { margin-top: 1.042rem; }
-  .row {
-    display: grid;
-    grid-template-columns: 3.542rem 0.781rem 0.833rem 2.552rem 1fr;
-  }
-  /* Year links land on a card; the extra 16px puts its row's dot at the usual 100px from the top. */
-  .row-cards > .art-hit { scroll-margin-top: calc(5.208rem + 0.833rem); }
-  .row-date {
-    grid-column: 1; justify-self: end;
-    margin-top: 0.208rem;
-    white-space: nowrap;
-  }
-  /* The timeline: a 16px dot at the top of each row, and a 5px line from it down to the next row's
-     dot. The last row closes with a second dot just below it, so the line never trails off. */
-  .row-tl { grid-column: 3; position: relative; }
-  .row-tl::before, .row-end {
-    content: "";
-    position: absolute; left: 0; top: 0;
-    width: 0.833rem; height: 0.833rem;
-    border-radius: 50%;
-    background: #fff;
-  }
-  .row-tl::after {
-    content: "";
-    position: absolute; left: calc(50% - 0.13rem); top: 0.833rem; bottom: 0;
-    width: 0.26rem;
-    background: #fff;
-  }
-  .row-end { top: 100%; }
-  .row:not(:last-child) .row-end { display: none; }
-  /* Cards start 16px below the dot; 16px under them (+16 at the top of the next row) makes the
-     32px row gap. */
-  .row-cards {
-    grid-column: 5;
-    display: flex; gap: 1.667rem; align-items: flex-start;
-    padding: 0.833rem 0;
-  }
 
   /* Off-screen images have their src removed (see the observer in the script): no alt-text flash. */
   img:not([src]) { visibility: hidden; }
 
-  /* Hover: cardFx (lib/effects/cardFx.css) (.art-hit is the hitbox, the cards are .card-fx). */
-  .art-hit { position: relative; }
-  /* Every card opens the dialog: an invisible button covers it. */
-  .art-open {
-    position: absolute; inset: 0; width: 100%; height: 100%;
-    padding: 0; border: 0; background: none; cursor: pointer;
-  }
-  .art-open:focus-visible { outline: 0.208rem solid #fff; outline-offset: 0.208rem; border-radius: 0.833rem; }
-  /* "3 images" pill on art that opens into a carousel */
-  .multi-badge {
-    position: absolute; top: 0.833rem; right: 0.833rem;
-    padding: 0.208rem 0.625rem; border-radius: 1rem;
-    font-size: 0.833rem; font-weight: 700; line-height: 1.4;
-    background: rgba(0,0,0,0.55);
-    pointer-events: none;
-  }
-
+  /* Hover: cardFx (lib/effects/cardFx.css): the hitbox (createHit, gallery.js) is the .card-fx-hit, the cards are .card-fx. */
   .empty { margin-top: 1.042rem; font-size: 1.0417rem; opacity: 0.6; }
 </style>
 </head>
@@ -192,8 +137,6 @@
   </section>
 
   <section id="more" class="more">
-    <h2 class="heading">More</h2>
-    <div class="rows" id="rows"></div>
   </section>
 
 </main>
@@ -209,6 +152,7 @@
 
 <script src="/lib/vendor/marked.umd.js"></script>
 <script src="/lib/components/card.js"></script>
+<script src="/lib/components/gallery.js"></script>
 <script>
   // Content comes from the server's /api/art, which lists whatever is in content/art (see README
   // "Adding content"). Everything is built with textContent / DOM nodes, never innerHTML.
@@ -238,18 +182,13 @@
   };
   const empty = (parent) => parent.appendChild(el('p', 'empty', 'Nothing here yet.'));
 
-  // Wraps a card's art in its hover hitbox: the art gets a "3 images" pill when the entry is a
-  // carousel, and the invisible button over it opens the dialog. Returns the hitbox.
-  function hitbox(art, entry) {
-    if (entry.images.length > 1) art.append(el('span', 'multi-badge', `${entry.images.length} images`));
-    const button = el('button', 'art-open');
-    button.type = 'button';
-    button.setAttribute('aria-label', `View ${entry.title}`);
-    button.addEventListener('click', () => openDialog(entry));
-    const wrap = el('div', 'art-hit card-fx-hit');
-    wrap.append(art, button);
-    return wrap;
-  }
+  // Wraps a card's art in its hover hitbox (gallery.js): the art gets a "3 images" pill when the
+  // entry is a carousel, and the invisible button over it opens the dialog. Returns the hitbox.
+  const hitbox = (art, entry) => createHit(art, {
+    label: `View ${entry.title}`,
+    badge: entry.images.length > 1 ? `${entry.images.length} images` : null,
+    onOpen: () => openDialog(entry),
+  });
 
   function renderOcs(ocs) {
     const list = document.getElementById('ocs-list');
@@ -272,57 +211,12 @@
     }
   }
 
-  // "2026-05-07" -> "5/7/26"
-  const shortDate = (iso) => {
-    const [y, m, d] = iso.split('-');
-    return `${+m}/${+d}/${y.slice(2)}`;
-  };
-
-  // One art card: the Card component (lib/components/card.js), cover image only.
-  function renderCard(piece) {
-    const cover = piece.images[0];
-    const card = createCard({ title: piece.title, date: piece.date, image: cover, width: rowWidth(cover) });
-    return hitbox(card, piece);
-  }
-
-  // A card's width in a row (rem): the Card's own width (the art at 400 tall), kept between 160 and
-  // the full 1152 row (a wider panorama is cropped to fit).
-  const ROW_W = 60, GAP = 1.667, MIN_W = 8.333;
-  const rowWidth = (image) => Math.min(ROW_W, Math.max(MIN_W, cardWidth(image)));
-
-  // Pieces arrive newest first and fill rows in order, across years: a row takes cards until the
-  // next one would overflow the 1152 width (rem, so it's the same at every window size). Each row is
-  // labeled with the date of its first (newest) piece. The first card of each year gets
-  // id="y<year>" for the sidebar link (on the card, not the row: one row can hold two years' starts).
-
-  function renderRow(items) {
-    const row = el('div', 'row');
-    const date = el('time', 'subheading row-date', shortDate(items[0].date));
-    date.dateTime = items[0].date;
-    const tl = el('div', 'row-tl');
-    tl.appendChild(el('span', 'row-end'));
-    const cards = el('div', 'row-cards');
-    for (const piece of items) cards.appendChild(renderCard(piece));
-    row.append(date, tl, cards);
-    return row;
-  }
-
-  function renderRows(pieces) {
-    const rows = document.getElementById('rows');
+  // Pieces arrive newest first. The first piece of each year gets id="y<year>" for the sidebar link.
+  function renderMore(pieces) {
+    const gallery = createGallery({ title: 'More', items: pieces, onOpen: (piece) => openDialog(piece) });
+    document.getElementById('more').append(gallery);
     const years = document.getElementById('years');
-    if (!pieces.length) return empty(rows);
-    let row = [], used = 0;
-    for (const piece of pieces) {
-      const w = rowWidth(piece.images[0]);
-      if (row.length && used + GAP + w > ROW_W + 0.01) {
-        rows.appendChild(renderRow(row));
-        row = []; used = 0;
-      }
-      used += (row.length ? GAP : 0) + w;
-      row.push(piece);
-    }
-    if (row.length) rows.appendChild(renderRow(row));
-    const cards = rows.querySelectorAll('.art-hit');
+    const cards = gallery.querySelectorAll('.gallery-hit');
     pieces.forEach((piece, i) => {
       const year = piece.date.slice(0, 4);
       if (document.getElementById('y' + year)) return;
@@ -335,8 +229,8 @@
 
   fetch('/api/art')
     .then((res) => res.json())
-    .then(({ ocs, pieces }) => { renderOcs(ocs); renderRows(pieces); })
-    .catch(() => { empty(document.getElementById('ocs-list')); empty(document.getElementById('rows')); })
+    .then(({ ocs, pieces }) => { renderOcs(ocs); renderMore(pieces); })
+    .catch(() => { empty(document.getElementById('ocs-list')); document.getElementById('more').append(createGallery({ title: 'More', items: [] })); })
     .finally(() => window.glassRims?.());   // rims for the cards that were just added
 </script>
 <script src="/lib/components/sidebar.js"></script>
