@@ -42,3 +42,12 @@
   pointer-events: none;
   mix-blend-mode: overlay;
 }
+/* Inside a <dialog> the rim is wrapped in a popover (see glass.js): its own top-layer element, so the
+   overlay blend sits on the wrapper, in the root stacking context, instead of isolating the dialog.
+   The UA popover styles (inset 0, margin auto, border, padding, background) are all reset. */
+.glass-rim-pop {
+  position: fixed; inset: auto; left: 0; top: 0; width: 0; height: 0;
+  margin: 0; padding: 0; border: 0; background: none; overflow: visible;
+  pointer-events: none; mix-blend-mode: overlay;
+}
+.glass-rim-pop .glass-rim { position: static; display: block; width: 100%; height: 100%; mix-blend-mode: normal; }
