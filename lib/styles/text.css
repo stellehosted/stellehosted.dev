@@ -16,6 +16,13 @@
   color: transparent;
   line-height: 1.1;
 }
+/* text.js moves the fill onto the plain-text runs when there's an emoji (Safari draws one inside the clip as a white box). */
+.has-emoji { background: none; color: #fff; }
+.has-emoji > .gradient-text {
+  background: linear-gradient(to bottom, rgba(255,255,255,0.75), #fff);
+  -webkit-background-clip: text; background-clip: text;
+  color: transparent;
+}
 .title {
   font-size: 4.1667rem;   /* 80 */
   font-weight: 900;
