@@ -27,8 +27,10 @@
   object-fit: cover;
   filter: blur(0.833rem);   /* 16 */
   transition: opacity 0.2s ease;
-  will-change: filter;      /* its own layer, so Safari rasterizes the blur once, at full size */
 }
+/* Its own layer, so Safari rasterizes the blur once, at full size. Only while loaded, so cards that
+   are a screen away (card.js drops their src and .loaded) don't each hold a GPU layer. */
+.card-blur.loaded { will-change: filter; }
 /* A backdrop or filter blur computed before the image arrives can stick (Safari keeps the blur of
    the empty image and draws the loaded picture with hard, un-faded edges). So the copy stays hidden
    and unblurred until card.js marks it .loaded, a frame after the image has decoded. */
