@@ -66,51 +66,15 @@
 <script src="/lib/components/card.js"></script>
 <script src="/lib/components/gallery.js"></script>
 <script>
-  // Content comes from the server's /api/photos, which lists whatever is in content/photos (see
-  // README "Adding content"): one gallery per section, and in the sidebar, one heading per section
-  // with its groups (years, or subfolders like "11th") under it. Built with DOM nodes, never innerHTML.
-  const el = (tag, className, text) => {
-    const node = document.createElement(tag);
-    if (className) node.className = className;
-    if (text !== undefined) node.textContent = text;
-    return node;
-  };
-  const slug = (text) => text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'section';
-  const link = (className, href, text) => {
-    const node = el('a', className, text);
-    node.href = href;
-    return node;
-  };
-
-  function render(sections) {
-    const main = document.getElementById('sections');
-    const nav = document.getElementById('nav');
-    if (!sections.length) {
-      main.append(createGallery({ title: 'Photos', items: [] }));
-      return;
-    }
-    for (const section of sections) {
-      const id = slug(section.name);
-      const items = section.groups.flatMap((g) => g.pieces);
-      const gallery = createGallery({ title: section.name, items, onOpen: (piece) => openDialog(piece) });
-      const node = el('section');
-      node.id = id;
-      main.appendChild(node).append(gallery);
-
-      // Each group's first card is the target of its sidebar link.
-      const cards = gallery.querySelectorAll('.gallery-hit');
-      const list = el('ul', 'sidebar-list');
-      let first = 0;
-      for (const group of section.groups) {
-        cards[first].id = `${id}-${slug(group.name)}`;
-        list.appendChild(el('li')).append(link('', '#' + cards[first].id, group.name));
-        first += group.pieces.length;
-      }
-      const navGroup = el('div', 'sidebar-group');
-      navGroup.append(link('sidebar-heading', '#' + id, section.name), list);
-      nav.append(navGroup);
-    }
-  }
+  // Content comes from the server's /api/photos, which lists the galleries in photos.yaml (see README
+  // "Adding content"): one gallery per top-level gallery, and in the sidebar, one heading per gallery
+  // with its sub-galleries (years, grade levels...) under it.
+  const render = (galleries) => renderGalleries(galleries, {
+    main: document.getElementById('sections'),
+    nav: document.getElementById('nav'),
+    emptyTitle: 'Photos',
+    onOpen: (piece) => openDialog(piece),
+  });
 
   // sidebar.js reads the headings once, when it runs, so it's loaded after they've been added.
   const loadSidebar = () => {
@@ -121,7 +85,7 @@
 
   fetch('/api/photos')
     .then((res) => res.json())
-    .then(({ sections }) => render(sections))
+    .then(({ galleries }) => render(galleries))
     .catch(() => { if (!document.getElementById('sections').children.length) render([]); })
     .finally(() => { loadSidebar(); window.glassRims?.(); });   // rims for the cards that were just added
 </script>

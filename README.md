@@ -5,7 +5,7 @@ My personal website, and a perpetual work in progress...
 
 # Deployment
 1. Make `.env` & `docker-compose.yml` from their `.example` files
-2. Put `stellehosted.dev` & `navidrome` into the same Docker network (stellehosted.dev)
+2. Put Navidrome into the `stellehosted.dev` Docker network
 3. `docker compose up -d --build`
 
 ### Local Testing
@@ -31,40 +31,50 @@ More pages coming soon...
 <br>
 
 # Adding Content (`content/`)
-docker-compose: `./content` → `/app/content`
+- Both YAML & served content are in the root folder `content/`
+- `art.yaml` (`/art`) & `photos.yaml` (`/photos`)
+- **Image Formats:** `png`, `jpg`, `webp`, `avif`, `gif` and `heic`
 
-### Art (`/art`)
+### `gallery:`
+Manually ordered sections of `cards`
+| Gallery | Description |
+|---|---|
+| `name` | Page content & sidebar heading  
+| `folder` | Where the cards are, relative to `content/`<br>- Subfolders in `folder` are sidebar subheadings, sorted by name |
+
+<br>
+
+### `cards:`
+The images in a `gallery`, relative to `folder`, sorted by name
+| Cards | Description |
+|---|---|
+| `image` | Single-image card<br>`[yyyy-mm-dd] imageName` |
+| `dir` | Multi-image directory<br>`[yyyy-mm-dd] multiImage` |
+| `description` | (optional) Markdown |
+
+<br>
+
+### Example
+```yaml
+gallery:
+  - name: myGallery
+    folder: myGallery
+    cards:
+      - image: "[2026-01-01] image.jpg"
+
+      - image: "2026/[2026-02-01] image2.jpg" # in "2026" subfolder & under "2026" subheading
+
+      - dir: "2026/[2026-03-01] multiImage"
+        description: |
+          **markdown** descriptions
 ```
-content/art/
-  ocs/
-    1 oc1.png               oc name = filename; shown in order by number
-    1 oc1.md                (optional) description
-    2 oc2.png
-    colors.json             card BG gradient { "OC1": [ "#start", "#end" ] }
-    
-  [2026-05-07] artwork.png  [date] title
-  [2026-05-07] artwork.md   (optional) description
-  noDate.jpg                no [date] in filename: skipped
 
-  [2024-08-02] multi-art/   multi-piece carousel
-    1.png  2.png  3.png     shown in filename order
-    description.md          (optional) description
+### OC Cards (`/art`, top of `art.yaml`)
+```yaml
+ocs: # manual order
+  - name: oc1
+    colors: ["#start", "#end"] # (optional) card bg colors
+    image: "oc1.png" # or `dir:`
+    description: |
+      **markdown** descriptions
 ```
-
-### Photos (`/photos`)
-```
-content/photos/
-  1 gallery1/                     one gallery per folder; shown in order by number
-    [2026-05-07] photo.jpg        [date] title, same rules as art (.md description, folder = carousel)
-
-  2 gallery2/
-    subheading1/                  undated subfolder: its own sidebar subheading
-      [2026-09-10] photo.jpg
-    subheading2/
-```
-
-- Sidebar subheadings (years / subfolders) are ordered newest photo first
-
-### Both
-- **Image Formats:** `png`, `jpg`, `webp`, `avif`, `gif` and `heic` 
-- Server lists the folder on each request via `/api/art` / `/api/photos`, and serves the files from `/content/...`.

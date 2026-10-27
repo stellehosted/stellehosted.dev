@@ -123,7 +123,7 @@
   }
 
   /* More: the Gallery component (lib/components/gallery.css): a heading over a wrapping run of Cards. */
-  .more { margin-top: 4.375rem; }   /* 84 below the OC panel */
+  .content section + section { margin-top: 4.375rem; }   /* 84 */
 
   /* Off-screen images have their src removed (see the observer in the script): no alt-text flash. */
   img:not([src]) { visibility: hidden; }
@@ -135,25 +135,19 @@
 <body>
 
 <div class="bg"></div>
-<main class="content">
+<main class="content" id="content">
 
   <section id="ocs">
     <h2 class="heading">OC’s</h2>
     <div class="ocs glass" id="ocs-list"></div>
   </section>
 
-  <section id="more" class="more">
-  </section>
 
 </main>
 
-<nav class="sidebar">
+<nav class="sidebar" id="nav">
   <h1 class="title sidebar-title">Art</h1>
   <a class="sidebar-heading" href="#ocs">OC’s</a>
-  <div class="sidebar-group">
-    <a class="sidebar-heading" href="#more">More</a>
-    <ul class="sidebar-list" id="years"></ul>
-  </div>
 </nav>
 
 <script src="/lib/vendor/marked.umd.js"></script>
@@ -218,29 +212,27 @@
     }
   }
 
-  // Pieces arrive newest first. The first piece of each year gets id="y<year>" for the sidebar link.
-  function renderMore(pieces) {
-    const gallery = createGallery({ title: 'More', items: pieces, onOpen: (piece) => openDialog(piece) });
-    document.getElementById('more').append(gallery);
-    const years = document.getElementById('years');
-    const cards = gallery.querySelectorAll('.gallery-hit');
-    pieces.forEach((piece, i) => {
-      const year = piece.date.slice(0, 4);
-      if (document.getElementById('y' + year)) return;
-      cards[i].id = 'y' + year;
-      const link = el('a', '', year);
-      link.href = '#y' + year;
-      years.appendChild(el('li')).appendChild(link);
-    });
-  }
+  // Galleries come from art.yaml: each is a section after the OCs, with its sub-galleries (years...) under it in the sidebar.
+  const renderMore = (galleries) => renderGalleries(galleries, {
+    main: document.getElementById('content'),
+    nav: document.getElementById('nav'),
+    emptyTitle: 'More',
+    onOpen: (piece) => openDialog(piece),
+  });
+
+  // sidebar.js reads the headings once, when it runs, so it's loaded after they've been added.
+  const loadSidebar = () => {
+    const script = document.createElement('script');
+    script.src = '/lib/components/sidebar.js';
+    document.body.appendChild(script);
+  };
 
   fetch('/api/art')
     .then((res) => res.json())
-    .then(({ ocs, pieces }) => { renderOcs(ocs); renderMore(pieces); })
-    .catch(() => { empty(document.getElementById('ocs-list')); document.getElementById('more').append(createGallery({ title: 'More', items: [] })); })
-    .finally(() => window.glassRims?.());   // rims for the cards that were just added
+    .then(({ ocs, galleries }) => { renderOcs(ocs); renderMore(galleries); })
+    .catch(() => { empty(document.getElementById('ocs-list')); if (document.querySelectorAll('.content section').length < 2) renderMore([]); })
+    .finally(() => { loadSidebar(); window.glassRims?.(); });   // rims for the cards that were just added
 </script>
-<script src="/lib/components/sidebar.js"></script>
 <script src="/lib/styles/glass.js"></script>
 <script src="/lib/components/dialog.js"></script>
 <script src="/lib/components/dock.js"></script>
