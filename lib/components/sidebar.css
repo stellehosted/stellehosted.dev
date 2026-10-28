@@ -53,7 +53,7 @@
   border-radius: 0.833rem;
   overflow: hidden;                          /* masks the glow to the pill */
 }
-.sidebar-heading-text { position: relative; font-size: 1.6667rem; }   /* the Heading style (text.css) with its size overridden to 32px, as in Sketch */
+.sidebar-heading-text { position: relative; font-size: 1.6667rem; white-space: nowrap; }   /* the Heading style (text.css) with its size overridden to 32px, as in Sketch */
 
 /* Pill ("Hover"): gray 10%, 8px background blur, white inner glow. Shown on hover and when active. */
 .sidebar-heading::before {
