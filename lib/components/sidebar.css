@@ -49,11 +49,14 @@
   display: block;
   width: 15.625rem; height: 3.333rem;        /* 300 x 64 */
   margin-left: -2.708rem;
-  padding: 0.9375rem 0 0 2.708rem;           /* text top 18px down */
+  padding: 0 0 0 2.708rem;                   /* text left edge; the text itself is centered vertically */
   border-radius: 0.833rem;
   overflow: hidden;                          /* masks the glow to the pill */
 }
-.sidebar-heading-text { position: relative; font-size: 1.6667rem; white-space: nowrap; }   /* the Heading style (text.css) with its size overridden to 32px, as in Sketch */
+.sidebar-heading-text {
+  position: absolute; left: 2.708rem; top: 50%; transform: translateY(calc(-50% + 0.06em));   /* anchored to the pill's left-center, so any font size stays centered (the light is at the same mid-line). The box centers on ascent+descent, not on the lowercase letters (x-height), so the 0.06em nudge down is in em to scale with the shrunk text. Tune it here. */
+  font-size: 1.6667rem; white-space: nowrap;
+}   /* the Heading style (text.css) with its size overridden to 32px, as in Sketch */
 
 /* Pill ("Hover"): gray 10%, 8px background blur, white inner glow. Shown on hover and when active. */
 .sidebar-heading::before {
