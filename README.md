@@ -4,7 +4,7 @@ My personal website, and a perpetual work in progress...
 <br>
 
 # Deployment
-1. Make `.env` & `docker-compose.yml` from their `.example` files
+1. Make `docker-compose.yml` from `docker-compose.yml.example` & fill in its `environment:`
 2. Put Navidrome into the `stellehosted.dev` Docker network
 3. `docker compose up -d --build`
 
@@ -12,7 +12,7 @@ My personal website, and a perpetual work in progress...
 ```bash
 PORT=3000 node server/server.js
 ```
-Set `NOWPLAYING_MOCK=1` in `.env` to seed test nowPlaying data
+Set `NOWPLAYING_MOCK=1` in `environment:` (or the shell) to seed test nowPlaying data
 
 <br>
 
@@ -31,7 +31,7 @@ More pages coming soon...
 <br>
 
 # Adding Content (`content/`)
-- Both YAML & served content are in the root folder `content/`
+- Served content is in the root folder `content/`, the YAMLs in `content/manifests/`
 - `art.yaml` (`/art`) & `photos.yaml` (`/photos`)
 - **Image Formats:** `png`, `jpg`, `webp`, `avif`, `gif` and `heic`
 
@@ -53,6 +53,14 @@ The images in a `gallery`, relative to `folder`, sorted by name
 | `description` | (optional) Markdown |
 
 <br>
+
+### Auto-sync
+The server edits `cards:` for you (every ~5s, comments & descriptions kept)
+- A `[yyyy-mm-dd]` image or folder dropped in a gallery's `folder` is added as a card (newest first) — write its `description` under it
+- A card whose file is gone is removed
+- Undated files are ignored
+- Skipped if the folder is unreachable or empty, or if the YAML has an error
+- Only `content/manifests/` needs to be writable: `content/` stays `:ro` in `docker-compose.yml`, with `manifests/` mounted over it
 
 ### Example
 ```yaml

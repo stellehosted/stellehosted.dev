@@ -2,11 +2,11 @@
 
 const fs = require('fs');
 const path = require('path');
-const { CONTENT_DIR } = require('./config');
+const { CONTENT_DIR, MANIFEST_DIR } = require('./config');
 
 // ---- Content manifests -----------------------------------------------------------------------
 // The content folder (a NAS share) holds far more than the site shows, so nothing is discovered by
-// listing folders. Two YAML files in its root say what is on the site, and ONLY the images they
+// listing folders. Two YAML files in its manifests/ folder say what is on the site, and ONLY the images they
 // name can be served from /content/ (see README, "Adding Content"):
 //   art.yaml     { ocs: [...], gallery: [...] }
 //   photos.yaml  { gallery: [...] }
@@ -164,7 +164,7 @@ const manifests = {};
 function manifest(name) {
   const cached = manifests[name];
   if (cached && Date.now() - cached.checkedAt < MANIFEST_CHECK_MS) return cached.data;
-  const file = path.join(CONTENT_DIR, `${name}.yaml`);
+  const file = path.join(MANIFEST_DIR, `${name}.yaml`);
   let data = cached?.data ?? MANIFESTS[name](null);   // missing file = nothing to show yet
   let mtimeMs = cached?.mtimeMs;
   try {
@@ -186,4 +186,4 @@ function manifest(name) {
 
 const isAllowed = (rel) => Object.keys(MANIFESTS).some((name) => isAllowedIn(manifest(name).allowed, rel));
 
-module.exports = { manifest, isAllowed, cleanPath, listImages, contentUrl, NEEDS_CONVERSION };
+module.exports = { manifest, isAllowed, cleanPath, cleanRel, listImages, contentUrl, NEEDS_CONVERSION, DATED, IMAGE_EXT };

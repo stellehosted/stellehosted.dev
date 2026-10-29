@@ -4,18 +4,27 @@ services:
     build:
       context: .
       dockerfile: server/Dockerfile
+
     environment:
-      - NAVIDROME_URL=${NAVIDROME_URL}
-      - NAVIDROME_USER=${NAVIDROME_USER}
-      - NAVIDROME_PASSWORD=${NAVIDROME_PASSWORD}
-      - NAVIDROME_USERNAME_FILTER=${NAVIDROME_USERNAME_FILTER:-}
-      - NOWPLAYING_MOCK=${NOWPLAYING_MOCK:-}
+      NAVIDROME_URL: http://navidrome:4533
+      NAVIDROME_USER: 
+      NAVIDROME_PASSWORD: 
+      NAVIDROME_USERNAME_FILTER: 
+
+      # Serve test now-playing data (see server/mock.js)
+      # paused, warm, dark, light, long, short, nocover, nothing
+      NOWPLAYING_MOCK: ""
+
     volumes:
-      - ./content:/app/content
+      - ./content:/app/content:ro
+      - ./content/manifests:/app/content/manifests
+
     networks:
       - stellehosted.dev
+
     ports:
       - 1030:8080
+      
     restart: unless-stopped
 
 networks:

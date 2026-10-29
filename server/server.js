@@ -1,8 +1,5 @@
 // Static file server for stellehosted.dev + a small Navidrome now-playing proxy.
 
-// Local runs: pick up ../.env (Docker passes these through docker-compose instead; already-set vars win).
-try { process.loadEnvFile(require('path').join(__dirname, '..', '.env')); } catch {}
-
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
@@ -94,6 +91,7 @@ const server = http.createServer(async (req, res) => {
 });
 
 server.listen(PORT, () => {
+  require('./sync').start();
   console.log(`stellehosted.dev listening on :${PORT} (Navidrome: ${NAVIDROME_URL}, content: ${CONTENT_DIR})`);
 });
 
