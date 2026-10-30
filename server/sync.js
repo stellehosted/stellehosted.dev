@@ -43,6 +43,7 @@ function cardTarget(node) {
 }
 
 async function syncGallery(g) {
+  if (g.get('sync') === false) return false;   // curated by hand
   const folder = cleanRel(String(g.get('folder') ?? ''));
   if (!folder) return false;
   let found;

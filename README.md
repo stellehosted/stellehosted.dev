@@ -41,6 +41,7 @@ Manually ordered sections of `cards`
 |---|---|
 | `name` | Page content & sidebar heading  
 | `folder` | Where the cards are, relative to `content/`<br>- Subfolders in `folder` are sidebar subheadings, sorted by name |
+| `sync` | (optional, default `true`) `false` = [Auto-sync](#auto-sync) leaves this gallery's `cards` alone |
 
 <br>
 
@@ -59,6 +60,7 @@ The server edits `cards:` for you (every ~5s, comments & descriptions kept)
 - A `[yyyy-mm-dd]` image or folder dropped in a gallery's `folder` is added as a card (newest first) — write its `description` under it
 - A card whose file is gone is removed
 - Undated files are ignored
+- A card you delete by hand comes back while its file exists: set `sync: false` on the gallery to curate it yourself
 - Skipped if the folder is unreachable or empty, or if the YAML has an error
 - Only `content/manifests/` needs to be writable: `content/` stays `:ro` in `docker-compose.yml`, with `manifests/` mounted over it
 
