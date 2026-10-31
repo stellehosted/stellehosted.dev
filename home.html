@@ -207,7 +207,7 @@
   .np-viz.paused i { opacity: 0; }
   .np-viz.paused .np-pause { opacity: 1; }
   @keyframes np-bar { 0%, 100% { transform: scaleY(0.2); } 50% { transform: scaleY(1); } }
-  .np-title, .np-meta { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .np-title, .np-meta { display: block; text-decoration: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .np-title { font-weight: 700; font-size: calc(1.0417 * var(--u)); color: #fff; }
   .np-meta { margin-top: calc(0.417 * var(--u)); font-size: calc(1.0417 * var(--u)); color: rgba(255,255,255,0.5); }
 
@@ -283,17 +283,17 @@
 
   <div class="nowplaying glass no-art" id="np-pill">
     <div class="np-blur" aria-hidden="true"><img id="np-cover-blur" alt=""></div>
-    <div class="album-art">
+    <a class="album-art" href="https://www.last.fm/user/SpaceSysZZZ" target="_blank" rel="noopener">
       <div class="album-art-clip"><img id="np-cover" src="album.jpg" alt="Album cover"></div>
-    </div>
+    </a>
     <div class="np-info">
       <div class="np-title-row">
         <div class="np-viz" id="np-viz" aria-hidden="true"><i></i><i></i><i></i>
           <svg class="np-pause" viewBox="0 0 16 16"><rect x="3.5" y="2.5" width="3" height="11" rx="1"/><rect x="9.5" y="2.5" width="3" height="11" rx="1"/></svg>
         </div>
-        <div class="np-title" id="np-title"></div>
+        <a class="np-title" id="np-title" href="https://www.last.fm/user/SpaceSysZZZ" target="_blank" rel="noopener"></a>
       </div>
-      <div class="np-meta" id="np-meta"></div>
+      <a class="np-meta" id="np-meta" href="https://www.last.fm/user/SpaceSysZZZ" target="_blank" rel="noopener"></a>
     </div>
   </div>
 
