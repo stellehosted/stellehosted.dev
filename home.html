@@ -8,6 +8,7 @@
 <link rel="apple-touch-icon" href="/branding/apple-touch-icon.png">
 <link rel="stylesheet" href="/lib/font/font.css">
 <link rel="stylesheet" href="/lib/styles/glass.css">
+<link rel="stylesheet" href="/lib/styles/text.css">
 <style>
   /* Unit system: 1rem == 1 real Sketch unit on the 1920x1080 canvas. html font-size is set so 100rem == canvas width and 56.25rem == canvas height, whichever is the limiting dimension of the viewport (a "contain" fit, centered, matching Sketch's 1920x1080 artboard exactly). Every measurement below is simply the Sketch value divided by 19.2 (px / 1920 * 100). */
   html {
@@ -75,8 +76,8 @@
     mask-image: linear-gradient(to bottom, transparent calc((var(--i) - 1) * 100% / 6), #000 calc(var(--i) * 100% / 6));
   }
 
-  /* Background Blur: 650px band, progressive Background blur 0->32px, gradient wash 0%->100% black */
-  .path-band { --r: 1.667rem; height: 33.854rem; }
+  /* Background Blur: 728px band, progressive Background blur 0->32px, gradient wash 0%->100% black */
+  .path-band { --r: 1.667rem; height: 37.917rem; }
   .path-band .tint { background: linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 100%); }
 
   /* Glass surfaces (.glass-secondary) and their rims come from lib/styles/glass.css + glass.js. Component
@@ -98,17 +99,13 @@
   /* Username + Bio */
   .hero-username {
     position: absolute;
-    left: 9.375rem; top: 18.333rem;
-    font-weight: 700;
-    font-size: 7.8125rem;
-    line-height: 1;
-    color: #fff;
+    left: 7.8125rem; top: 18.333rem;
+    font-size: 7.8125rem;   /* keeps its own size; weight, fill and glow come from .title */
     white-space: nowrap;
-    text-shadow: 0 1.302rem 2.604rem #000;
   }
   .hero-tagline {
     position: absolute;
-    left: 9.375rem; top: 26.433rem;
+    left: 7.8125rem; top: 26.433rem;
     font-style: italic;
     font-size: 2.0833rem;
     letter-spacing: -0.025em;
@@ -120,7 +117,7 @@
      it isn't an exact multiple of the desktop one); everything inside is in component units. */
   .socials {
     --glass-radius: 1.667;
-    left: 9.375rem; top: 30.391rem;
+    left: 7.8125rem; top: 30.391rem;
     width: 32.9688rem; height: 3.229rem;
     display: flex; align-items: center;
     gap: calc(2.5 * var(--u));
@@ -154,7 +151,7 @@
 
   /* Now Playing. The pill grows with its text between min and max width. */
   .nowplaying {
-    left: 9.375rem; top: 36.955rem;
+    left: 7.8125rem; top: 36.955rem;
     height: calc(6.667 * var(--u));
     width: max-content;
     min-width: calc(24.3229 * var(--u));
@@ -269,7 +266,7 @@
 
   <img class="hero-logo" src="branding/Logo (White).svg" alt="stellehosted logo">
 
-  <h1 class="hero-username">stellehosted</h1>
+  <h1 class="title hero-username">stellehosted</h1>
   <p class="hero-tagline">A computer person &amp; an arts person smashed into one</p>
 
   <div class="socials glass">
