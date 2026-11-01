@@ -27,8 +27,8 @@
    pointer so the wheel still scrolls the page behind it; only the links are interactive. */
 .sidebar {
   position: fixed;
-  left: calc(50% - 50rem); top: calc(50% - 28.125rem);
-  width: 20rem; height: 56.25rem;
+  left: 0; top: 0;
+  width: 20rem; height: 100vh;
   box-sizing: border-box;
   display: flex; flex-direction: column; justify-content: center; align-items: flex-start;
   padding-left: 5.208rem;
@@ -116,7 +116,7 @@
 .sidebar-bg {
   --r: 0.833rem;
   position: fixed; top: 0; bottom: 0; left: 0;
-  width: calc(50vw - 50rem + 20rem);   /* any letterbox bar + the 384px sidebar */
+  width: 20rem;   /* the 384px sidebar, flush with the window's left edge */
   background: linear-gradient(to right, rgba(0,0,0,0.5) calc(100% - 20rem), rgba(0,0,0,0));
   pointer-events: none;
 }
