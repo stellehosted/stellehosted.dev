@@ -1,4 +1,4 @@
-// Content manifests (art.yaml, photos.yaml): what is on the site, and which files may be served.
+// Content manifests (art.yaml, photos.yaml, design.yaml): what is on the site, and which files may be served.
 
 const fs = require('fs');
 const path = require('path');
@@ -10,6 +10,7 @@ const { CONTENT_DIR, MANIFEST_DIR } = require('./config');
 // name can be served from /content/ (see README, "Adding Content"):
 //   art.yaml     { ocs: [...], gallery: [...] }
 //   photos.yaml  { gallery: [...] }
+//   design.yaml  { gallery: [...] }
 // A gallery is { name, folder, cards: [...] }. Its name is its heading on the page and in the sidebar,
 // and the headings are in the order listed. Its cards are paths relative to `folder` (a path
 // relative to the content folder), and the subfolders they sit in become the subheadings (years,
@@ -156,9 +157,14 @@ function buildPhotos(doc) {
   return { view: { galleries: readGalleries(doc?.gallery, 'photos.yaml gallery', allowed) }, allowed };
 }
 
+function buildDesign(doc) {
+  const allowed = newAllowed();
+  return { view: { galleries: readGalleries(doc?.gallery, 'design.yaml gallery', allowed) }, allowed };
+}
+
 // Parsed manifests, re-read when the file's mtime changes. A manifest that fails to parse keeps
 // serving the last good version (an error with line and column goes to the log).
-const MANIFESTS = { art: buildArt, photos: buildPhotos };
+const MANIFESTS = { art: buildArt, photos: buildPhotos, design: buildDesign };
 const manifests = {};
 
 function manifest(name) {

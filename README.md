@@ -26,13 +26,16 @@ My art portfolio over the years! This has been redesigned a couple too many time
 ### photos.html
 You want photo? We have photo!
 
+### design.html
+My design work.
+
 More pages coming soon...
 
 <br>
 
 # Adding Content (`content/`)
 - Served content is in the root folder `content/`, the YAMLs in `content/manifests/`
-- `art.yaml` (`/art`) & `photos.yaml` (`/photos`)
+- `art.yaml` (`/art`) & `photos.yaml` (`/photos`) & `design.yaml` (`/design`)
 - **Image Formats:** `png`, `jpg`, `webp`, `avif`, `gif` and `heic`
 
 ### `gallery:`

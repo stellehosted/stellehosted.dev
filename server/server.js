@@ -5,7 +5,7 @@ const fs = require('fs');
 const path = require('path');
 const { SITE_ROOT, CONTENT_DIR, MIME } = require('./config');
 const { fetchNowPlaying, handleCoverArt, NAVIDROME_URL } = require('./navidrome');
-const { scanArt, scanPhotos, serveContent } = require('./content');
+const { scanArt, scanPhotos, scanDesign, serveContent } = require('./content');
 
 const PORT = process.env.PORT || 8080;
 
@@ -77,6 +77,18 @@ const server = http.createServer(async (req, res) => {
       res.end(JSON.stringify(data));
     } catch (err) {
       console.error('[photos] scan failed:', err.message);
+      res.writeHead(500).end();
+    }
+    return;
+  }
+
+  if (url.pathname === '/api/design') {
+    try {
+      const data = await scanDesign();
+      res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-cache' });
+      res.end(JSON.stringify(data));
+    } catch (err) {
+      console.error('[design] scan failed:', err.message);
       res.writeHead(500).end();
     }
     return;

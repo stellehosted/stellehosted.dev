@@ -45,6 +45,10 @@ async function scanPhotos() {
   return { galleries: await withSizedGalleries(manifest('photos').view.galleries) };
 }
 
+async function scanDesign() {
+  return { galleries: await withSizedGalleries(manifest('design').view.galleries) };
+}
+
 // Serves the images the manifests name. Unlike the site's own files these are big, so revalidate with
 // Last-Modified (304 when unchanged) instead of re-sending the image on every visit.
 function serveContent(req, res, urlPath) {
@@ -108,4 +112,4 @@ function serveContent(req, res, urlPath) {
   });
 }
 
-module.exports = { scanArt, scanPhotos, serveContent };
+module.exports = { scanArt, scanPhotos, scanDesign, serveContent };

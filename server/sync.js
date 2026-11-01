@@ -101,7 +101,7 @@ async function syncManifest(name) {
 }
 
 let running = false;
-function start(names = ['art', 'photos']) {
+function start(names = ['art', 'photos', 'design']) {
   const pass = async () => {
     if (running) return;
     running = true;
