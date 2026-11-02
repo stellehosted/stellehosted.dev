@@ -31,7 +31,9 @@
   .bg {
     position: fixed; inset: 0; z-index: 0;
     background-image: url('branding/Banner.jpeg');
-    background-size: cover;
+    /* Banner.jpeg is square, so "cover" is max(100vw, 100vh). Floored at the canvas size (100 units on this display, scale.js) so resizing crops the image instead of scaling it, as on the other pages. */
+    background-size: max(calc(var(--ui-base) * 100), 100vw, 100vh) auto;
+    background-repeat: no-repeat;
     background-position: center;
   }
 

@@ -39,7 +39,9 @@
   .bg {
     position: fixed; inset: 0; z-index: -1;   /* under the in-flow content */
     background-image: url('/branding/Banner.jpeg');
-    background-size: cover;
+    /* Banner.jpeg is square, so its "cover" size is max(100vw, 100vh). Floor that at the canvas size (100 units, as on a 1920 canvas) so resizing the window crops the image instead of scaling it. */
+    background-size: max(calc(var(--ui-base) * 100), 100vw, 100vh) auto;
+    background-repeat: no-repeat;
     background-position: center;
   }
 
