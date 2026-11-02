@@ -12,13 +12,14 @@
    between layouts. --dock-bottom is how far the svg's box (which includes the pills' shadow bleed)
    hangs below the viewport. Everything inside the svg scales with its viewBox, and the glass panes
    are sized in % of this box, so they follow automatically. */
-.dock-wrap, .dock-glass, svg.dock-rims {
+.dock-wrap, .dock-glass, svg.dock-rims, .dock-bg {
   --k: 1;
-  --u: min(1vw, 1.7778vh);   /* the dock's own "rem" (1920x1080 contain fit), so pages' html font-size never matters */
-  /* Dock width follows the window height: 69.35svh == 39.01rem at 16:9, so wide windows are
-     unchanged, but squarer ones no longer shrink with the width (rem is width-limited there).
-     92vw keeps it on screen in narrow windows. svh, not vh, so mobile toolbars don't resize it. */
-  --dw: min(calc(69.35svh * var(--k)), 92vw);
+  /* The dock's own "rem": fixed per display (scale.js, loaded by every page), like a navbar, so resizing
+     the window never scales it and a page's html font-size never matters. */
+  --u: var(--ui-base);
+  /* Dock width is 39.01 units, capped only as an emergency: 93svh keeps it inside a very short
+     window and 92vw inside a narrow one. svh, not vh, so mobile toolbars don't resize it. */
+  --dw: min(calc(39.010 * var(--u) * var(--k)), calc(93svh * var(--k)), 92vw);
   --dock-bottom: calc(var(--dw) * -0.07075);   /* -2.76rem at the design size */
   position: fixed;
   left: calc(50% - var(--dw) / 2); bottom: var(--dock-bottom);
@@ -36,10 +37,11 @@
    solid to the bottom, so the radius climbs ~linearly from 0 at the top edge to 16px at the
    bottom, with no sharp residue between steps (triangle masks left sharp strips). position:fixed is deliberate, see dock.js. */
 .dock-bg {
-  --u: min(1vw, 1.7778vh);
-  --r: calc(0.833 * var(--u));
+  /* Locked to the dock's scale (--dw, shared above): 176px band and 16px blur at the design size. */
+  --band: 0.23499;   /* 9.167 / 39.010 */
+  --r: calc(var(--dw) * 0.02135);   /* 0.833 / 39.010 */
   position: fixed; left: 0; right: 0; bottom: 0;
-  height: calc(9.167 * var(--u));
+  height: calc(var(--dw) * var(--band));
   z-index: 0;
   overflow: hidden;
   pointer-events: none;
@@ -85,11 +87,11 @@ svg.dock-rims {
    hangs 71.25px below the viewport (the Sketch instance is flush with the bottom), and the BG
    strip is 294.56px tall (still a 16px blur). */
 @media (orientation: portrait) {
-  .dock-wrap, .dock-glass, svg.dock-rims {
+  .dock-wrap, .dock-glass, svg.dock-rims, .dock-bg {
     --u: min(1.7778vw, 1svh);
     --k: 1.56006;
     --dw: calc(39.010 * var(--k) * var(--u));
     --dock-bottom: calc(-3.711 * var(--u));
   }
-  .dock-bg { --u: min(1.7778vw, 1svh); height: calc(15.342 * var(--u)); }
+  .dock-bg { --band: 0.25209; }   /* 15.342 / (39.010 * 1.56006) */
 }
