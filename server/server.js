@@ -33,7 +33,7 @@ function serveStatic(req, res, urlPath) {
       res.writeHead(404).end('Not found');
       return;
     }
-    // no-cache = always revalidate: stops Safari and Cloudflare serving a stale nowplaying.js/home.html after a deploy.
+    // no-cache = always revalidate: stops browsers serving a stale nowplaying.js/home.html after a deploy.
     res.writeHead(200, {
       'Content-Type': MIME[path.extname(filePath)] || 'application/octet-stream',
       'Cache-Control': 'no-cache',

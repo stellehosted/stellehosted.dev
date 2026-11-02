@@ -1,10 +1,10 @@
 /* -- Gallery ---------------------
-   The Sketch "Gallery": a Heading, 20 below it a wrapping run of Cards (gap 32, 1300 wide). Each card
+   The Sketch "Gallery": a Heading, 20 below it a wrapping run of Cards (gap 32, as wide as the page's content column). Each card
    is the Card component (card.css) inside a hitbox: an invisible button over it opens the entry.
    Needs text.css (.heading) and card.css. */
 .gallery {
   display: flex; flex-direction: column; gap: 1.042rem;   /* 20 */
-  width: 67.708rem; max-width: 100%;                      /* 1300 */
+  width: 100%;                                            /* fills the content column */
 }
 .gallery-cards {
   display: flex; flex-wrap: wrap; gap: 1.667rem;          /* 32, across and down */
