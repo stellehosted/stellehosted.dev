@@ -41,6 +41,7 @@
   --band: 0.23499;   /* 9.167 / 39.010 */
   --r: calc(var(--dw) * 0.02135);   /* 0.833 / 39.010 */
   position: fixed; left: 0; right: 0; bottom: 0;
+  width: auto;   /* the shared rule above gives the dock its --dw width; the band spans the viewport */
   height: calc(var(--dw) * var(--band));
   z-index: 0;
   overflow: hidden;
